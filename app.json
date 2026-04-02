@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "ReliefLink",
+    "slug": "relieflink",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0d9488"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "ReliefLink uses your location when you choose to share it during an emergency.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "ReliefLink may use your location in the background only when you enable related features."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0f766e"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "SEND_SMS"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "ReliefLink uses your location when you choose to share it during an emergency.",
+          "locationAlwaysAndWhenInUsePermission": "ReliefLink may use your location when you enable related safety features."
+        }
+      ]
+    ]
+  }
+}
