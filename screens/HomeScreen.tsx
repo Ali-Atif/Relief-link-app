@@ -1,285 +1,415 @@
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useCallback } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import React, { useEffect } from 'react';
+import { I18nManager, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { IconTileButton, PrimaryButton, ScreenLayout, SosButton } from '../components';
+import { ScreenLayout, SosButton } from '../components';
+import QuickTile from '../components/newUI/QuickTile';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useTranslatedHeader } from '../hooks/useTranslatedHeader';
-import { useSosEmergency } from '../hooks/useSosEmergency';
-import type { RootStackParamList } from '../navigation/types';
-import { colors, radii, spacing } from '../utils/constants';
+import { spacing, radii, colors } from '../utils/constants';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
+export function HomeScreen() {
+  const navigation = useNavigation();
+  const { user, logout, busy } = useAuth();
+  const { language, toggleLanguage, t } = useLanguage();
 
-export function HomeScreen({ navigation }: Props) {
-  const { user, logout, busy, error } = useAuth();
-  const { sosLoading, triggerSos } = useSosEmergency();
-  const { t, language, toggleLanguage } = useLanguage();
+  // Handle RTL for Urdu
+  useEffect(() => {
+    if (language === 'ur') {
+      I18nManager.forceRTL(true);
+    } else {
+      I18nManager.forceRTL(false);
+    }
+  }, [language]);
 
-  useTranslatedHeader(navigation, 'nav.reliefLink');
+  const handleLanguageToggle = async () => {
+    await toggleLanguage();
+  };
 
-  const goSosDetails = useCallback(() => navigation.navigate('SOS'), [navigation]);
-  const goContacts = useCallback(() => navigation.navigate('Contacts'), [navigation]);
-  const goReport = useCallback(() => navigation.navigate('Report'), [navigation]);
-  const goGuides = useCallback(() => navigation.navigate('Guides'), [navigation]);
-  const goQuiz = useCallback(() => navigation.navigate('Quiz'), [navigation]);
+  // Helper for RTL text alignment
+  const textAlign = language === 'ur' ? 'right' : 'left';
+  const direction = language === 'ur' ? 'rtl' : 'ltr';
 
   return (
-    <ScreenLayout title={t('home.title')} subtitle={t('home.subtitle')}>
-      
-      {/* --- Relief / Language Bar --- */}
-      <Pressable
-        onPress={() => void toggleLanguage()}
-        style={({ pressed }) => [styles.modernBar, pressed && styles.barPressed]}
-        accessibilityRole="button"
-        accessibilityLabel={t('home.language')}
-      >
-        <View style={styles.langIconWrap}>
-          <Ionicons name="globe-outline" size={24} color={colors.primaryDark} />
+    <ScreenLayout>
+      {/* Language & Account Section - at top */}
+      <View style={styles.settingsCard}>
+        <View style={styles.settingRow}>
+          <View>
+            <Text style={styles.settingLabel}>{t('home.language')}</Text>
+          </View>
+          <Pressable
+            style={({ pressed }) => [styles.langToggle, pressed && styles.langTogglePressed]}
+            onPress={handleLanguageToggle}
+          >
+            <Text style={styles.langText}>{language === 'en' ? 'English' : 'اردو'}</Text>
+          </Pressable>
         </View>
-        <View style={styles.langTextCol}>
-          <Text style={styles.langLabel}>{t('home.language')}</Text>
-          <Text style={styles.langValue}>
-            {language === 'en' ? 'English → اردو' : 'اردو → English'}
+
+        {user && (
+          <>
+            <View style={styles.divider} />
+            <View style={styles.settingRow}>
+              <Text style={styles.userEmail}>{user.email}</Text>
+              <Pressable
+                style={({ pressed }) => [styles.signOutButton, pressed && styles.signOutButtonPressed]}
+                onPress={logout}
+                disabled={busy}
+              >
+                <Ionicons name="log-out" size={14} color="#fff" />
+                <Text style={styles.signOutText}>{busy ? t('home.signingOut') : t('home.signOut')}</Text>
+              </Pressable>
+            </View>
+          </>
+        )}
+      </View>
+
+      {/* Welcome banner (only on Home) */}
+      <View style={[styles.welcomeCard, { direction }]}>
+        <View style={styles.welcomeLeft}>
+          <Text style={[styles.welcomeTitle, { textAlign }]}>{t('home.welcomeTitle')}</Text>
+          <Text style={[styles.welcomeSubtitle, { textAlign }]} numberOfLines={2}>
+            {t('home.welcomeSubtitle')}
           </Text>
-          <Text style={styles.langHint}>{t('home.tapToSwitch')}</Text>
         </View>
-        <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-      </Pressable>
-
-      {/* --- Online / Offline Status Pill --- */}
-      <View style={[styles.statusPill, user?.email ? styles.online : styles.offline]}>
-        <View style={styles.statusIconWrap}>
-          <Ionicons
-            name={user?.email ? 'person-circle-outline' : 'cloud-offline-outline'}
-            size={24}
-            color={user?.email ? colors.text : colors.surfaceMuted}
-          />
-          {user?.email && <View style={styles.onlineDot} />}
+        <View style={styles.welcomeBadge}>
+          <Text style={[styles.badgeText, { textAlign }]}>{t('home.welcomeBadge')}</Text>
         </View>
-        <Text style={styles.signedInText} numberOfLines={1}>
-          {user?.email
-            ? t('home.signedInAs', { email: user.email })
-            : t('home.signedInOffline')}
-        </Text>
       </View>
 
-      {/* --- Error Box --- */}
-      {error ? (
-        <View style={styles.errorBox}>
-          <Ionicons name="alert-circle" size={20} color={colors.emergency} />
-          <Text style={styles.error}>{error}</Text>
+      {/* Large SOS action first after banner */}
+      <SosButton 
+        onPress={() => navigation.navigate('SOS' as never)} 
+        subtitle={t('sos.quickEmergencyAccess')} 
+      />
+
+      {/* Quick Access grid */}
+      <View style={{ direction }}>
+        <Text style={[styles.sectionTitle, { textAlign }]}>{t('home.quickAccess')}</Text>
+          <View style={styles.grid}>
+            <View style={styles.col}>
+              <QuickTile
+                title={t('home.disasterGuides')}
+                subtitle={t('home.learnSafetyProcedure')}
+                icon="book"
+                color="#2563eb"
+                badge="6 Guides"
+                onPress={() => navigation.navigate('Guides' as never)}
+              />
+            </View>
+            <View style={styles.col}>
+              <QuickTile
+                title={t('home.ngoReport')}
+                subtitle={t('home.emergencyMedicalHelp')}
+                icon="heart"
+                color="#ef4444"
+                badge="1 Tutorial"
+                onPress={() => navigation.navigate('Report' as never)}
+              />
+            </View>
+            <View style={styles.col}>
+              <QuickTile
+                title={t('home.emergencySOS')}
+                subtitle={t('home.quickEmergencyAccess')}
+                icon="warning"
+                color="#f97316"
+                badge="Instant"
+                onPress={() => navigation.navigate('SOS' as never)}
+              />
+            </View>
+            <View style={styles.col}>
+              <QuickTile
+                title={t('home.preparedness')}
+                subtitle={t('home.familyChecklist')}
+                icon="list"
+                color="#10b981"
+                badge="10 Items"
+                onPress={() => navigation.navigate('Contacts' as never)}
+              />
+            </View>
+          </View>
+      </View>
+
+      {/* Safety Tip of the Day */}
+      <View style={[styles.tipCard, { direction }]}>
+        <View style={styles.tipIcon}>
+          <Ionicons name="bulb" size={22} color="#744210" />
         </View>
-      ) : null}
-
-      {/* --- SOS Button --- */}
-      <SosButton
-        onPress={triggerSos}
-        loading={sosLoading}
-        disabled={busy}
-        subtitle={t('sos.subtitleHint')}
-        emergencySubLabel={t('sos.buttonSub')}
-        accessibilityLabel={t('sos.a11yLabel')}
-      />
-
-      {/* --- SOS Details Button --- */}
-      <PrimaryButton
-        label={t('home.sosDetails')}
-        variant="outline"
-        icon="information-circle-outline"
-        onPress={goSosDetails}
-        disabled={busy}
-      />
-
-      {/* --- Quick Actions --- */}
-      <Text style={styles.sectionLabel}>{t('home.quickActions')}</Text>
-      <View style={styles.grid}>
-        <IconTileButton
-          label={t('home.emergencyContacts')}
-          icon="people"
-          onPress={goContacts}
-        />
-        <IconTileButton
-          label={t('home.reportIncident')}
-          icon="document-text"
-          onPress={goReport}
-        />
-        <IconTileButton
-          label={t('home.safetyGuides')}
-          icon="book"
-          onPress={goGuides}
-        />
-        <IconTileButton
-          label={t('home.awarenessQuiz')}
-          icon="school"
-          accent="slate"
-          onPress={goQuiz}
-        />
+        <View style={styles.tipBody}>
+          <Text style={[styles.tipTitle, { textAlign }]}>{t('home.safetyTipTitle')}</Text>
+          <Text style={[styles.tipText, { textAlign }]} numberOfLines={3}>
+            {t('home.safetyTipContent')}
+          </Text>
+        </View>
       </View>
 
-      {/* --- Hint Box --- */}
-      <View style={styles.hintBox}>
-        <Ionicons name="shield-checkmark-outline" size={18} color={colors.primary} />
-        <Text style={styles.hint}>{t('home.hint')}</Text>
+      {/* Why Use This App */}
+      <View style={[styles.whyCard, { direction }]}>
+        <Text style={[styles.whyTitle, { textAlign }]}>{t('home.whyUseTitle')}</Text>
+        <View style={styles.whyList}>
+          <Text style={[styles.bullet, { textAlign }]}>{t('home.whyUseBullet1')}</Text>
+          <Text style={[styles.bullet, { textAlign }]}>{t('home.whyUseBullet2')}</Text>
+          <Text style={[styles.bullet, { textAlign }]}>{t('home.whyUseBullet3')}</Text>
+          <Text style={[styles.bullet, { textAlign }]}>{t('home.whyUseBullet4')}</Text>
+        </View>
       </View>
 
-      {/* --- Sign Out Button --- */}
-      <PrimaryButton
-        label={busy ? t('home.signingOut') : t('home.signOut')}
-        variant="outline"
-        icon="log-out-outline"
-        onPress={() => logout()}
-        disabled={busy || sosLoading}
-      />
-      {busy ? <ActivityIndicator color={colors.primary} style={styles.spinner} /> : null}
+      {/* Footer */}
+      <View style={[styles.footer, { direction }]}>
+        <Text style={[styles.footerText, { textAlign }]}>{t('home.footerText')}</Text>
+      </View>
+
+      <View style={[styles.bottomTabs, { direction }]}>
+        {[
+          { label: t('home.tabHome'), icon: 'home', screen: 'Home', active: true },
+          { label: t('home.tabGuides'), icon: 'book', screen: 'Guides' },
+          { label: t('home.tabReports'), icon: 'medkit', screen: 'Report' },
+          { label: t('home.tabChecklist'), icon: 'checkmark-circle', screen: 'Contacts' },
+          { label: t('home.tabSOS'), icon: 'warning', screen: 'SOS' },
+          { label: t('home.tabQuiz'), icon: 'help-circle', screen: 'Quiz' },
+        ].map((item) => (
+          <Pressable
+            key={item.label}
+            style={({ pressed }) => [
+              styles.tabItem,
+              item.active && styles.tabItemActive,
+              pressed && styles.tabItemPressed,
+            ]}
+            onPress={() => navigation.navigate(item.screen as never)}
+          >
+            <Ionicons
+              name={item.icon as any}
+              size={22}
+              color={item.active ? colors.primary : colors.textMuted}
+            />
+            <Text style={[styles.tabLabel, item.active && styles.tabLabelActive]}>{item.label}</Text>
+          </Pressable>
+        ))}
+      </View>
     </ScreenLayout>
   );
 }
 
-// --- Modern Styles for Only Online / Relief Bar ---
 const styles = StyleSheet.create({
-  // ---- Relief / Language Bar ----
-  modernBar: {
+  welcomeCard: {
+    borderRadius: radii.lg,
+    padding: spacing.md,
+    backgroundColor: '#6d28d9',
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.14,
+    shadowRadius: 18,
+    elevation: 8,
+    overflow: 'hidden',
+  },
+  welcomeLeft: {
+    marginBottom: spacing.sm,
+  },
+  welcomeTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#fff',
+    marginBottom: spacing.xs,
+  },
+  welcomeSubtitle: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.9)',
+    fontWeight: '600',
+  },
+  welcomeBadge: {
+    marginTop: spacing.md,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radii.md,
+  },
+  badgeText: {
+    color: 'rgba(255,255,255,0.95)',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  sectionTitle: {
+    marginTop: spacing.md,
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: spacing.sm,
+  },
+  grid: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    borderRadius: 16,
-    backgroundColor: colors.surface,
-    gap: spacing.md,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 2,
-    marginVertical: spacing.sm,
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginHorizontal: -spacing.xs,
   },
-  barPressed: {
-    opacity: 0.92,
-    backgroundColor: colors.surfaceMuted,
+  col: {
+    flexBasis: '48%',
+    maxWidth: '48%',
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.xs,
   },
-
-  langIconWrap: {
+  tipCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#fffaf0',
+    borderRadius: radii.md,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: '#fde68a',
+  },
+  tipIcon: {
     width: 44,
     height: 44,
-    borderRadius: 12,
-    backgroundColor: colors.primaryLight,
+    borderRadius: radii.md,
+    backgroundColor: '#fff7ed',
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: spacing.md,
   },
-  langTextCol: { flex: 1 },
-  langLabel: {
-    fontSize: 11,
+  tipBody: {
+    flex: 1,
+  },
+  tipTitle: {
+    fontSize: 15,
     fontWeight: '800',
+    color: '#92400e',
+    marginBottom: spacing.xs,
+  },
+  tipText: {
+    fontSize: 13,
     color: colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    lineHeight: 18,
   },
-  langValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.primaryDark,
-    marginTop: 4,
-  },
-  langHint: {
-    fontSize: 12,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-
-  // ---- Online / Offline Status Pill ----
-  statusPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: 50,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
-    marginVertical: spacing.sm,
-  },
-  online: {
-    backgroundColor: colors.primary,
-  },
-  offline: {
-    backgroundColor: colors.surfaceMuted,
+  whyCard: {
+    marginTop: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  statusIconWrap: {
-    marginRight: spacing.md,
-    position: 'relative',
-  },
-  onlineDot: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#4ade80',
-    borderWidth: 1,
-    borderColor: colors.surface,
-  },
-  signedInText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.surface,
-  },
-
-  // --- Error Box ---
-  errorBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-    padding: spacing.md,
-    backgroundColor: '#fef2f2',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#fecaca',
-    marginVertical: spacing.sm,
-  },
-  error: {
-    flex: 1,
-    color: colors.emergencyDark,
-    fontSize: 14,
-    fontWeight: '600',
-    lineHeight: 20,
-  },
-
-  // --- Quick Actions / Section ---
-  sectionLabel: {
-    fontSize: 12,
+  whyTitle: {
+    fontSize: 15,
     fontWeight: '800',
+    marginBottom: spacing.sm,
+  },
+  whyList: {
+    gap: spacing.xs,
+  },
+  bullet: {
     color: colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginTop: spacing.sm,
-    marginBottom: -spacing.xs,
-  },
-  grid: { gap: spacing.md },
-
-  // --- Hint Box ---
-  hintBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-    paddingVertical: spacing.sm,
-  },
-  hint: {
-    flex: 1,
     fontSize: 13,
-    color: colors.textMuted,
-    lineHeight: 20,
-    fontWeight: '500',
   },
-
-  // --- Spinner ---
-  spinner: { marginTop: -spacing.sm },
+  settingsCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    padding: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: spacing.md,
+  },
+  settingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.xs,
+  },
+  settingLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  userEmail: {
+    fontSize: 12,
+    color: colors.textMuted,
+    fontWeight: '600',
+  },
+  langToggle: {
+    backgroundColor: colors.primaryLight,
+    paddingVertical: 4,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radii.md,
+  },
+  langTogglePressed: {
+    opacity: 0.8,
+  },
+  langText: {
+    fontWeight: '700',
+    fontSize: 12,
+    color: colors.primaryDark,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: spacing.xs,
+  },
+  signOutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radii.md,
+    backgroundColor: '#dc2626',
+    gap: 4,
+  },
+  signOutButtonPressed: {
+    opacity: 0.8,
+  },
+  signOutText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 11,
+  },
+  footer: {
+    marginTop: spacing.md,
+    padding: spacing.md,
+    alignItems: 'center',
+  },
+  footerText: {
+    color: colors.textMuted,
+    fontSize: 13,
+  },
+  bottomTabs: {
+    marginTop: spacing.md,
+    borderRadius: radii.xl,
+    backgroundColor: colors.surface,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    padding: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  tabItem: {
+    width: '32%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  tabItemActive: {
+    backgroundColor: colors.primaryLight,
+    borderRadius: radii.lg,
+  },
+  tabItemPressed: {
+    opacity: 0.7,
+  },
+  tabLabel: {
+    marginTop: 6,
+    fontSize: 11,
+    color: colors.textMuted,
+    textAlign: 'center',
+  },
+  tabLabelActive: {
+    color: colors.primaryDark,
+    fontWeight: '700',
+  },
 });
+
+export default HomeScreen;

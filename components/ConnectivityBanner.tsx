@@ -11,8 +11,8 @@ export function ConnectivityBanner() {
   const { t } = useLanguage();
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.safe, isOnline ? styles.online : styles.offline]}>
-      <View style={styles.inner}>
+    <SafeAreaView edges={['top']} style={styles.safeArea}>
+      <View style={[styles.container, isOnline ? styles.online : styles.offline]}>
         <Ionicons
           name={isOnline ? 'wifi' : 'cloud-offline'}
           size={18}
@@ -27,17 +27,25 @@ export function ConnectivityBanner() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    borderBottomLeftRadius: radii.md,
-    borderBottomRightRadius: radii.md,
+  safeArea: {
+    backgroundColor: 'transparent',
   },
-  inner: {
+  container: {
+    marginHorizontal: spacing.md,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: radii.xl,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 6,
     gap: spacing.sm,
-    paddingBottom: 10,
-    paddingHorizontal: spacing.md,
   },
   online: {
     backgroundColor: colors.onlineBg,
