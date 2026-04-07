@@ -8,4 +8,7 @@ export type RootStackParamList = {
   Report: undefined;
   Guides: undefined;
   GuideDetail: { guideId: string; title?: string };
+  Quiz: undefined;
 };
+
+export type AuthStackParamList = Pick<RootStackParamList, 'Login' | 'Register'>;

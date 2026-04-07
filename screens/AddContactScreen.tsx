@@ -1,34 +1,86 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { PrimaryButton, ScreenLayout } from '../components';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useTranslatedHeader } from '../hooks/useTranslatedHeader';
+import { addEmergencyContact } from '../services/emergencyContactsStorage';
 import type { RootStackParamList } from '../navigation/types';
 import { colors, spacing } from '../utils/constants';
+import { validatePhoneNumber } from '../utils/phoneValidation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AddContact'>;
 
 export function AddContactScreen({ navigation }: Props) {
+  const { t } = useLanguage();
+  useTranslatedHeader(navigation, 'nav.addContact');
+
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    setPhoneError(null);
+
+    const nameTrim = name.trim();
+    if (!nameTrim) {
+      Alert.alert(t('addContact.nameReqTitle'), t('addContact.nameReqMsg'));
+      return;
+    }
+
+    const phoneCheck = validatePhoneNumber(phone);
+    if (!phoneCheck.valid) {
+      setPhoneError(t(`phone.${phoneCheck.errorKey}`));
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await addEmergencyContact({ name: nameTrim, phone: phoneCheck.value });
+      navigation.goBack();
+    } catch {
+      Alert.alert(t('addContact.saveFailTitle'), t('addContact.tryAgain'));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
-    <ScreenLayout title="Add contact" subtitle="Form only — saving comes later.">
+    <ScreenLayout title={t('nav.addContact')} subtitle={t('addContact.subtitle')}>
       <View style={styles.field}>
-        <Text style={styles.label}>Name</Text>
-        <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Contact name" />
-      </View>
-      <View style={styles.field}>
-        <Text style={styles.label}>Phone</Text>
+        <Text style={styles.label}>{t('addContact.name')}</Text>
         <TextInput
           style={styles.input}
-          value={phone}
-          onChangeText={setPhone}
-          placeholder="+1 …"
-          keyboardType="phone-pad"
+          value={name}
+          onChangeText={setName}
+          placeholder={t('addContact.phName')}
+          autoCapitalize="words"
         />
       </View>
-      <PrimaryButton label="Save (placeholder)" onPress={() => navigation.goBack()} />
+      <View style={styles.field}>
+        <Text style={styles.label}>{t('addContact.phone')}</Text>
+        <TextInput
+          style={[styles.input, phoneError ? styles.inputError : null]}
+          value={phone}
+          onChangeText={(v) => {
+            setPhone(v);
+            if (phoneError) setPhoneError(null);
+          }}
+          placeholder="+92 300 1234567"
+          keyboardType="phone-pad"
+          autoComplete="tel"
+        />
+        {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
+        <Text style={styles.hint}>{t('addContact.hint')}</Text>
+      </View>
+      <PrimaryButton
+        label={saving ? t('addContact.saving') : t('addContact.save')}
+        icon="save-outline"
+        onPress={() => void save()}
+        disabled={saving}
+      />
     </ScreenLayout>
   );
 }
@@ -51,5 +103,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     fontSize: 16,
     color: colors.text,
+  },
+  inputError: {
+    borderColor: '#b91c1c',
+  },
+  errorText: {
+    color: '#b91c1c',
+    fontSize: 13,
+  },
+  hint: {
+    fontSize: 12,
+    color: colors.textMuted,
   },
 });

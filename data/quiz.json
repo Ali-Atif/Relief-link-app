@@ -1,0 +1,186 @@
+[
+  {
+    "id": "flood-1",
+    "topic": "flood",
+    "correctIndex": 0,
+    "en": {
+      "question": "Why avoid driving through flood water, even if it looks shallow?",
+      "options": [
+        "Moving water can sweep a vehicle away quickly",
+        "It always ruins tires",
+        "GPS fails in rain",
+        "It is only unsafe at night"
+      ]
+    },
+    "ur": {
+      "question": "سیلابی پانی میں گاڑی کیوں نہ چلائیں، چاہے وہ کم گہرا لگے؟",
+      "options": [
+        "بہتا پانی گاڑی جلدی بہا سکتا ہے",
+        "ٹائر ہمیشہ خراب ہو جاتے ہیں",
+        "بارش میں GPS کام نہیں کرتا",
+        "صرف رات کو خطرناک ہے"
+      ]
+    }
+  },
+  {
+    "id": "flood-2",
+    "topic": "flood",
+    "correctIndex": 1,
+    "en": {
+      "question": "If flood water rises inside a building, where should you go?",
+      "options": [
+        "Basement to shut off power",
+        "The highest safe floor or roof you can reach",
+        "Any room with only windows",
+        "Behind a street-facing glass door"
+      ]
+    },
+    "ur": {
+      "question": "عمارت میں پانی بڑھے تو کہاں جائیں؟",
+      "options": [
+        "بجلی بند کرنے کے لیے تہ خانہ",
+        "جتنا ممکن ہو بلند ترین محفوز منزل یا چھت",
+        "صرف کھڑکی والا کمرہ",
+        "گلی کی طرف شیشے کے دروازے کے پیچھے"
+      ]
+    }
+  },
+  {
+    "id": "quake-1",
+    "topic": "earthquake",
+    "correctIndex": 2,
+    "en": {
+      "question": "During strong earthquake shaking, what should you do?",
+      "options": [
+        "Run outside immediately",
+        "Always stand in a doorway",
+        "Drop, Cover, and Hold On under sturdy shelter if possible",
+        "Open all windows first"
+      ]
+    },
+    "ur": {
+      "question": "شدید زلزلے کے دوران کیا کریں؟",
+      "options": [
+        "فوراً باہر دوڑیں",
+        "ہمیشہ دروازے میں کھڑے ہوں",
+        "ممکن ہو تو مضبوط سایہ تلے گریں، ڈھانپیں، پکڑ کر رہیں",
+        "پہلے تمام کھڑکیاں کھولیں"
+      ]
+    }
+  },
+  {
+    "id": "quake-2",
+    "topic": "earthquake",
+    "correctIndex": 1,
+    "en": {
+      "question": "Why do aftershocks happen after a large earthquake?",
+      "options": [
+        "They are rare and can be ignored",
+        "The Earth’s crust readjusts; more shaking may follow",
+        "They only occur near oceans",
+        "They mean the quake was not real"
+      ]
+    },
+    "ur": {
+      "question": "بڑے زلزلے کے بعد بعدی زلزلے کیوں آتے ہیں؟",
+      "options": [
+        "یہ نایاب ہیں، نظر انداز کریں",
+        "زمین کی پرت دوبارہ ترتیب لیتی ہے؛ مزید ہلزے ممکن",
+        "یہ صرف سمندر کے قریب ہوتے ہیں",
+        "اس کا مطلب جعلی زلزلہ ہے"
+      ]
+    }
+  },
+  {
+    "id": "fire-1",
+    "topic": "fire",
+    "correctIndex": 1,
+    "en": {
+      "question": "To leave a burning building, which exit should you normally use?",
+      "options": [
+        "Elevator for speed",
+        "Stairs, not elevators",
+        "Wait at your desk only",
+        "Always break an outside window first"
+      ]
+    },
+    "ur": {
+      "question": "جلتی عمارت چھوڑتے ہوئے عام طور پر کون سا راستہ؟",
+      "options": [
+        "تیزی کے لیے لفٹ",
+        "سیڑھیاں، لفٹ نہیں",
+        "صرف میز پر انتظار",
+        "پہلے ہمیشہ باہر کی کھڑکی توڑیں"
+      ]
+    }
+  },
+  {
+    "id": "fire-2",
+    "topic": "fire",
+    "correctIndex": 1,
+    "en": {
+      "question": "During a fire, if a door feels hot, what should you do?",
+      "options": [
+        "Open it quickly to look",
+        "Use another exit; do not open a hot door",
+        "Pour water on it then open",
+        "Stay in the room without sealing gaps"
+      ]
+    },
+    "ur": {
+      "question": "آگ میں دروازہ گرم لگے تو کیا کریں؟",
+      "options": [
+        "جلدی کھول کر دیکھیں",
+        "دوسرا راستہ لیں؛ گرم دروازہ نہ کھولیں",
+        "پانی ڈال کر کھولیں",
+        "درز بند کیے بغیر کمرے میں رہیں"
+      ]
+    }
+  },
+  {
+    "id": "fire-3",
+    "topic": "fire",
+    "correctIndex": 1,
+    "en": {
+      "question": "If your clothes catch fire, what should you do?",
+      "options": [
+        "Run to find water",
+        "Stop, Drop, and Roll",
+        "Wave your arms fast",
+        "Remove only your shoes"
+      ]
+    },
+    "ur": {
+      "question": "کپڑے آگ پکڑ لیں تو کیا کریں؟",
+      "options": [
+        "پانی کے لیے دوڑیں",
+        "رکیں، زمین پر لیٹیں، لوٹیں",
+        "بازو تیزی سے ہلائیں",
+        "صرف جوتے اتاریں"
+      ]
+    }
+  },
+  {
+    "id": "fire-4",
+    "topic": "fire",
+    "correctIndex": 1,
+    "en": {
+      "question": "In a smoke-filled room, where is breathing usually easier?",
+      "options": [
+        "Near the ceiling",
+        "Low to the floor",
+        "Only beside windows",
+        "In the center of the room"
+      ]
+    },
+    "ur": {
+      "question": "دھوئیں بھرے کمرے میں سانس کہاں آسان؟",
+      "options": [
+        "چھت کے قریب",
+        "فرش کے قریب نیچے",
+        "صرف کھڑکی کے پاس",
+        "کمرے کے وسط میں"
+      ]
+    }
+  }
+]

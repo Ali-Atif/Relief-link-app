@@ -1,0 +1,59 @@
+[
+  {
+    "id": "flood",
+    "title": "Flood",
+    "summary": "Get to high ground. Never enter moving or deep water.",
+    "sections": [
+      {
+        "heading": "If flooding is happening now",
+        "body": "Move to the highest safe floor or roof. Avoid basements and elevators.\n\nDo not walk or drive through flood water. As little as 15 cm (6 in) of moving water can knock you down; vehicles can be swept away.\n\nTurn off electricity at the main breaker only if you can reach it without standing in water.\n\nListen to local alerts. Follow evacuation orders immediately."
+      },
+      {
+        "heading": "After the flood",
+        "body": "Return home only when authorities say it is safe.\n\nAssume flood water is contaminated. Wash hands often; disinfect anything that touched flood water before using it for food.\n\nDocument damage with photos for insurance if you can do so safely.\n\nWatch for weakened floors, walls, and downed power lines."
+      },
+      {
+        "heading": "Prepare ahead",
+        "body": "Know your evacuation routes and meeting point for your household.\n\nKeep copies of important documents in a waterproof bag.\n\nPack a go-bag: water, food, medications, flashlight, radio, phone charger, first aid."
+      }
+    ]
+  },
+  {
+    "id": "earthquake",
+    "title": "Earthquake",
+    "summary": "Drop, Cover, and Hold On. Protect your head and neck.",
+    "sections": [
+      {
+        "heading": "During shaking",
+        "body": "DROP to your hands and knees. COVER your head and neck under a sturdy table or desk if possible. HOLD ON until shaking stops.\n\nIf no shelter is nearby, crawl away from windows and objects that can fall. Cover your head with your arms.\n\nStay inside until shaking stops. Do not run outside during strong shaking.\n\nIf you are in bed, stay there and cover your head with a pillow."
+      },
+      {
+        "heading": "If you are outdoors or in a vehicle",
+        "body": "Move to clear space away from buildings, trees, power lines, and cliffs. Drop and cover your head.\n\nIn a vehicle: pull over safely, set parking brake, stay inside until shaking stops. Avoid overpasses and bridges."
+      },
+      {
+        "heading": "After the earthquake",
+        "body": "Expect aftershocks. Each time, Drop, Cover, and Hold On.\n\nCheck yourself and others for injuries. Do not move seriously injured people unless they are in immediate danger.\n\nIf you smell gas or see sparks, leave the building if you can do so safely.\n\nUse text messages instead of voice calls to reduce network load."
+      }
+    ]
+  },
+  {
+    "id": "fire",
+    "title": "Fire",
+    "summary": "Get out fast. Stay low under smoke. Never go back inside.",
+    "sections": [
+      {
+        "heading": "If there is a fire in the building",
+        "body": "Leave immediately. Use stairs, not elevators. Close doors behind you to slow the spread of fire and smoke.\n\nIf smoke is thick, crawl low where air is clearer.\n\nFeel doors before opening: if hot, use another exit. If your only exit is blocked, stay in a room with the door closed, seal gaps with cloth, and signal from a window.\n\nOnce outside, go to your meeting place and call emergency services. Do not re-enter for people or pets—tell firefighters."
+      },
+      {
+        "heading": "If your clothes catch fire",
+        "body": "STOP, DROP, and ROLL: stop moving, drop to the ground, and roll back and forth to smother flames. Cover your face with your hands."
+      },
+      {
+        "heading": "Prevention and planning",
+        "body": "Test smoke alarms monthly. Keep exits and escape routes clear.\n\nPlan two ways out of every room and a family meeting place outside.\n\nLearn how to use a fire extinguisher only if the fire is small and you have a clear escape path; otherwise evacuate."
+      }
+    ]
+  }
+]
