@@ -7,6 +7,10 @@ export type CachedUser = {
   uid: string;
   email: string | null;
   displayName?: string | null;
+  role?: 'user' | 'ngo';
+  ngoName?: string;
+  phone?: string;
+  address?: string;
 };
 
 export async function saveCachedUser(user: CachedUser): Promise<void> {

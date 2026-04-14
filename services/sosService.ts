@@ -6,7 +6,9 @@
 import * as Location from 'expo-location';
 import * as SMS from 'expo-sms';
 
+import { auth } from './firebase';
 import { getEmergencyContacts } from './emergencyContactsStorage';
+import { createSosAlert } from './sosAlertsService';
 
 export type SosFailureReason =
   | 'no_contacts'
@@ -16,8 +18,8 @@ export type SosFailureReason =
   | 'sms_cancelled';
 
 export type SosResult =
-  | { ok: true; recipientCount: number; mapsUrl: string }
-  | { ok: false; reason: SosFailureReason; mapsUrl?: string };
+  | { ok: true; recipientCount: number; mapsUrl: string; notifiedNgoCount: number }
+  | { ok: false; reason: SosFailureReason; mapsUrl?: string; notifiedNgoCount?: number };
 
 /** Builds a Google Maps link from coordinates (works offline in the SMS body). */
 export function buildGoogleMapsUrl(latitude: number, longitude: number): string {
@@ -37,10 +39,6 @@ export async function runSosEmergency(): Promise<SosResult> {
   const contacts = await getEmergencyContacts();
   const phones = normalizePhones(contacts);
 
-  if (phones.length === 0) {
-    return { ok: false, reason: 'no_contacts' };
-  }
-
   const perm = await Location.requestForegroundPermissionsAsync();
   if (perm.status !== 'granted') {
     return { ok: false, reason: 'permission_denied' };
@@ -57,20 +55,36 @@ export async function runSosEmergency(): Promise<SosResult> {
   }
 
   const mapsUrl = buildGoogleMapsUrl(coords.latitude, coords.longitude);
+  const user = auth.currentUser;
+  const sosEvent = user
+    ? await createSosAlert({
+        userId: user.uid,
+        userName: user.displayName ?? user.email ?? 'User',
+        userEmail: user.email,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        mapsUrl,
+      })
+    : { alertId: '', notifiedNgoCount: 0 };
+
+  if (phones.length === 0) {
+    return { ok: false, reason: 'no_contacts', mapsUrl, notifiedNgoCount: sosEvent.notifiedNgoCount };
+  }
+
   const message = `I am in danger. My location: ${mapsUrl}`;
 
   const smsOk = await SMS.isAvailableAsync();
   if (!smsOk) {
     // Location already known — include link so the user can copy/share manually.
-    return { ok: false, reason: 'sms_not_supported', mapsUrl };
+    return { ok: false, reason: 'sms_not_supported', mapsUrl, notifiedNgoCount: sosEvent.notifiedNgoCount };
   }
 
   const smsResult = await SMS.sendSMSAsync(phones, message);
 
   if (smsResult.result === 'cancelled') {
-    return { ok: false, reason: 'sms_cancelled' };
+    return { ok: false, reason: 'sms_cancelled', notifiedNgoCount: sosEvent.notifiedNgoCount };
   }
 
   // Android often returns 'unknown' even when the user sent the message — treat as success.
-  return { ok: true, recipientCount: phones.length, mapsUrl };
+  return { ok: true, recipientCount: phones.length, mapsUrl, notifiedNgoCount: sosEvent.notifiedNgoCount };
 }

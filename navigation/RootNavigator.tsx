@@ -3,12 +3,16 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { useAuth } from '../contexts/AuthContext';
 import { AddContactScreen } from '../screens/AddContactScreen';
+import { ChatScreen } from '../screens/ChatScreen';
 import { ContactsScreen } from '../screens/ContactsScreen';
 import { GuideDetailScreen } from '../screens/GuideDetailScreen';
 import { GuidesScreen } from '../screens/GuidesScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { LoginScreen } from '../screens/LoginScreen';
+import { NgoHomeScreen } from '../screens/NgoHomeScreen';
+import { RegisterNgoScreen } from '../screens/RegisterNgoScreen';
 import { RegisterScreen } from '../screens/RegisterScreen';
+import { RegisterUserScreen } from '../screens/RegisterUserScreen';
 import { QuizScreen } from '../screens/QuizScreen';
 import { ReportScreen } from '../screens/ReportScreen';
 import { SOSScreen } from '../screens/SOSScreen';
@@ -42,10 +46,25 @@ export function RootNavigator() {
         <>
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Register" component={RegisterScreen} options={{ title: 'Create account' }} />
+          <Stack.Screen name="RegisterUser" component={RegisterUserScreen} options={{ title: 'Register user' }} />
+          <Stack.Screen name="RegisterNgo" component={RegisterNgoScreen} options={{ title: 'Register NGO' }} />
         </>
       ) : (
         <>
-          <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'ReliefLink', headerBackVisible: false }} />
+          {user.role === 'ngo' ? (
+            <Stack.Screen
+              name="NgoHome"
+              component={NgoHomeScreen}
+              options={{ title: 'NGO Dashboard', headerBackVisible: false }}
+            />
+          ) : (
+            <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'ReliefLink', headerBackVisible: false }} />
+          )}
+          {user.role === 'ngo' ? (
+            <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'ReliefLink' }} />
+          ) : (
+            <Stack.Screen name="NgoHome" component={NgoHomeScreen} options={{ title: 'NGO Dashboard' }} />
+          )}
           <Stack.Screen name="SOS" component={SOSScreen} options={{ title: 'Emergency SOS' }} />
           <Stack.Screen name="Contacts" component={ContactsScreen} options={{ title: 'Emergency contacts' }} />
           <Stack.Screen name="AddContact" component={AddContactScreen} options={{ title: 'Add contact' }} />
@@ -53,6 +72,7 @@ export function RootNavigator() {
           <Stack.Screen name="Guides" component={GuidesScreen} options={{ title: 'Safety guides' }} />
           <Stack.Screen name="GuideDetail" component={GuideDetailScreen} options={{ title: 'Guide' }} />
           <Stack.Screen name="Quiz" component={QuizScreen} options={{ title: 'Awareness quiz' }} />
+          <Stack.Screen name="Chat" component={ChatScreen} options={{ title: 'Support chat' }} />
         </>
       )}
     </Stack.Navigator>

@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect } from 'react';
 import { I18nManager, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -7,12 +8,26 @@ import { ScreenLayout, SosButton } from '../components';
 import QuickTile from '../components/newUI/QuickTile';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useNotifications } from '../hooks/useNotifications';
+import type { RootStackParamList } from '../navigation/types';
+import { getDailySafetyTip } from '../services/safetyTips';
+import { type SosAlert, subscribeUserSosAlerts } from '../services/sosAlertsService';
 import { spacing, radii, colors } from '../utils/constants';
 
 export function HomeScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user, logout, busy } = useAuth();
   const { language, toggleLanguage, t } = useLanguage();
+  const { notifications, unreadCount, markAllRead } = useNotifications();
+  const [myAlerts, setMyAlerts] = React.useState<SosAlert[]>([]);
+
+  useEffect(() => {
+    if (!user) {
+      setMyAlerts([]);
+      return;
+    }
+    return subscribeUserSosAlerts(user.uid, setMyAlerts);
+  }, [user]);
 
   // Handle RTL for Urdu
   useEffect(() => {
@@ -30,6 +45,19 @@ export function HomeScreen() {
   // Helper for RTL text alignment
   const textAlign = language === 'ur' ? 'right' : 'left';
   const direction = language === 'ur' ? 'rtl' : 'ltr';
+  const tabItems: Array<{
+    label: string;
+    icon: string;
+    screen: 'Home' | 'Guides' | 'Report' | 'Contacts' | 'SOS' | 'Quiz';
+    active?: boolean;
+  }> = [
+    { label: t('home.tabHome'), icon: 'home', screen: 'Home', active: true },
+    { label: t('home.tabGuides'), icon: 'book', screen: 'Guides' },
+    { label: t('home.tabReports'), icon: 'medkit', screen: 'Report' },
+    { label: t('home.tabChecklist'), icon: 'checkmark-circle', screen: 'Contacts' },
+    { label: t('home.tabSOS'), icon: 'warning', screen: 'SOS' },
+    { label: t('home.tabQuiz'), icon: 'help-circle', screen: 'Quiz' },
+  ];
 
   return (
     <ScreenLayout>
@@ -80,7 +108,7 @@ export function HomeScreen() {
 
       {/* Large SOS action first after banner */}
       <SosButton 
-        onPress={() => navigation.navigate('SOS' as never)} 
+        onPress={() => navigation.navigate('SOS')} 
         subtitle={t('sos.quickEmergencyAccess')} 
       />
 
@@ -95,7 +123,7 @@ export function HomeScreen() {
                 icon="book"
                 color="#2563eb"
                 badge="6 Guides"
-                onPress={() => navigation.navigate('Guides' as never)}
+                onPress={() => navigation.navigate('Guides')}
               />
             </View>
             <View style={styles.col}>
@@ -105,7 +133,7 @@ export function HomeScreen() {
                 icon="heart"
                 color="#ef4444"
                 badge="1 Tutorial"
-                onPress={() => navigation.navigate('Report' as never)}
+                onPress={() => navigation.navigate('Report')}
               />
             </View>
             <View style={styles.col}>
@@ -115,7 +143,7 @@ export function HomeScreen() {
                 icon="warning"
                 color="#f97316"
                 badge="Instant"
-                onPress={() => navigation.navigate('SOS' as never)}
+                onPress={() => navigation.navigate('SOS')}
               />
             </View>
             <View style={styles.col}>
@@ -125,7 +153,7 @@ export function HomeScreen() {
                 icon="list"
                 color="#10b981"
                 badge="10 Items"
-                onPress={() => navigation.navigate('Contacts' as never)}
+                onPress={() => navigation.navigate('Contacts')}
               />
             </View>
           </View>
@@ -139,9 +167,55 @@ export function HomeScreen() {
         <View style={styles.tipBody}>
           <Text style={[styles.tipTitle, { textAlign }]}>{t('home.safetyTipTitle')}</Text>
           <Text style={[styles.tipText, { textAlign }]} numberOfLines={3}>
-            {t('home.safetyTipContent')}
+            {getDailySafetyTip(language)}
           </Text>
         </View>
+      </View>
+
+      <View style={[styles.whyCard, { direction }]}>
+        <View style={styles.settingRow}>
+          <Text style={[styles.whyTitle, { textAlign }]}>{`Notifications (${unreadCount})`}</Text>
+          <Pressable onPress={() => void markAllRead()}>
+            <Text style={styles.markReadText}>Mark read</Text>
+          </Pressable>
+        </View>
+        {notifications.slice(0, 4).map((item) => (
+          <View key={item.id} style={styles.notificationRow}>
+            <Text style={[styles.notificationTitle, { textAlign }]}>{item.title}</Text>
+            <Text style={[styles.notificationText, { textAlign }]}>{item.body}</Text>
+          </View>
+        ))}
+        {notifications.length === 0 ? (
+          <Text style={[styles.notificationText, { textAlign }]}>No notifications yet.</Text>
+        ) : null}
+      </View>
+
+      <View style={[styles.whyCard, { direction }]}>
+        <Text style={[styles.whyTitle, { textAlign }]}>Your SOS applications</Text>
+        {myAlerts.slice(0, 3).map((alert) => (
+          <View key={alert.id} style={styles.notificationRow}>
+            <Text style={[styles.notificationTitle, { textAlign }]}>{`Status: ${alert.status}`}</Text>
+            <Text style={[styles.notificationText, { textAlign }]}>{alert.mapsUrl}</Text>
+            {alert.status === 'in_chat' ? (
+              <Pressable
+                onPress={() =>
+                  navigation.navigate('Chat', {
+                    chatId: alert.id,
+                    alertId: alert.id,
+                    userId: alert.userId,
+                    ngoId: alert.ngoId ?? '',
+                    otherPersonName: alert.ngoName ?? 'NGO Support',
+                  })
+                }
+              >
+                <Text style={styles.markReadText}>Open chat</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        ))}
+        {myAlerts.length === 0 ? (
+          <Text style={[styles.notificationText, { textAlign }]}>No SOS requests yet.</Text>
+        ) : null}
       </View>
 
       {/* Why Use This App */}
@@ -161,14 +235,7 @@ export function HomeScreen() {
       </View>
 
       <View style={[styles.bottomTabs, { direction }]}>
-        {[
-          { label: t('home.tabHome'), icon: 'home', screen: 'Home', active: true },
-          { label: t('home.tabGuides'), icon: 'book', screen: 'Guides' },
-          { label: t('home.tabReports'), icon: 'medkit', screen: 'Report' },
-          { label: t('home.tabChecklist'), icon: 'checkmark-circle', screen: 'Contacts' },
-          { label: t('home.tabSOS'), icon: 'warning', screen: 'SOS' },
-          { label: t('home.tabQuiz'), icon: 'help-circle', screen: 'Quiz' },
-        ].map((item) => (
+        {tabItems.map((item) => (
           <Pressable
             key={item.label}
             style={({ pressed }) => [
@@ -176,7 +243,7 @@ export function HomeScreen() {
               item.active && styles.tabItemActive,
               pressed && styles.tabItemPressed,
             ]}
-            onPress={() => navigation.navigate(item.screen as never)}
+            onPress={() => navigation.navigate(item.screen)}
           >
             <Ionicons
               name={item.icon as any}
@@ -409,6 +476,26 @@ const styles = StyleSheet.create({
   tabLabelActive: {
     color: colors.primaryDark,
     fontWeight: '700',
+  },
+  markReadText: {
+    color: colors.primaryDark,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  notificationRow: {
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+    gap: 2,
+  },
+  notificationTitle: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  notificationText: {
+    color: colors.textMuted,
+    fontSize: 12,
   },
 });
 

@@ -8,9 +8,35 @@ type Props = {
   title?: string;
   subtitle?: string;
   children: ReactNode;
+  /** When false, content is not inside ScrollView (required for FlatList / other VirtualizedLists). */
+  scrollable?: boolean;
 };
 
-export function ScreenLayout({ title, subtitle, children }: Props) {
+export function ScreenLayout({ title, subtitle, children, scrollable = true }: Props) {
+  const header =
+    title != null && title.length > 0 ? (
+      <View style={styles.titleBlock}>
+        <View style={styles.titleAccent} />
+        <View style={styles.titleTextWrap}>
+          <Text style={styles.title}>{title}</Text>
+          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+        </View>
+      </View>
+    ) : subtitle ? (
+      <Text style={styles.subtitleOnly}>{subtitle}</Text>
+    ) : null;
+
+  if (!scrollable) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+        <View style={styles.fixedOuter}>
+          {header}
+          <View style={[styles.body, styles.bodyFlex]}>{children}</View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <ScrollView
@@ -18,17 +44,7 @@ export function ScreenLayout({ title, subtitle, children }: Props) {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {title ? (
-          <View style={styles.titleBlock}>
-            <View style={styles.titleAccent} />
-            <View style={styles.titleTextWrap}>
-              <Text style={styles.title}>{title}</Text>
-              {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
-            </View>
-          </View>
-        ) : (
-          subtitle ? <Text style={styles.subtitleOnly}>{subtitle}</Text> : null
-        )}
+        {header}
         <View style={styles.body}>{children}</View>
       </ScrollView>
     </SafeAreaView>
@@ -43,6 +59,15 @@ const styles = StyleSheet.create({
   scroll: {
     paddingHorizontal: spacing.md + 2,
     paddingBottom: spacing.xl,
+  },
+  fixedOuter: {
+    flex: 1,
+    paddingHorizontal: spacing.md + 2,
+    paddingBottom: spacing.xl,
+  },
+  bodyFlex: {
+    flex: 1,
+    minHeight: 0,
   },
   titleBlock: {
     flexDirection: 'row',

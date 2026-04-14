@@ -1,7 +1,10 @@
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
+  RegisterUser: undefined;
+  RegisterNgo: undefined;
   Home: undefined;
+  NgoHome: undefined;
   SOS: undefined;
   Contacts: undefined;
   AddContact: undefined;
@@ -9,6 +12,16 @@ export type RootStackParamList = {
   Guides: undefined;
   GuideDetail: { guideId: string; title?: string };
   Quiz: undefined;
+  Chat: {
+    chatId: string;
+    alertId: string;
+    userId: string;
+    ngoId: string;
+    otherPersonName: string;
+  };
 };
 
-export type AuthStackParamList = Pick<RootStackParamList, 'Login' | 'Register'>;
+export type AuthStackParamList = Pick<
+  RootStackParamList,
+  'Login' | 'Register' | 'RegisterUser' | 'RegisterNgo'
+>;

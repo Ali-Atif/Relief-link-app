@@ -17,16 +17,23 @@ export function useSosEmergency() {
       const result = await runSosEmergency();
 
       if (result.ok) {
+        const ngoLine =
+          result.notifiedNgoCount > 0
+            ? `\n\n${result.notifiedNgoCount} NGO account(s) also received this SOS request.`
+            : '';
         Alert.alert(
           t('sos.alertSuccessTitle'),
-          t('sos.alertSuccessMsg', { count: result.recipientCount, url: result.mapsUrl }),
+          `${t('sos.alertSuccessMsg', { count: result.recipientCount, url: result.mapsUrl })}${ngoLine}`,
         );
         return;
       }
 
       switch (result.reason) {
         case 'no_contacts':
-          Alert.alert(t('sos.noContactsTitle'), t('sos.noContactsMsg'));
+          Alert.alert(
+            t('sos.noContactsTitle'),
+            `${t('sos.noContactsMsg')}\n\n${result.notifiedNgoCount ?? 0} NGO account(s) were still notified.`,
+          );
           break;
         case 'permission_denied':
           Alert.alert(t('sos.permissionTitle'), t('sos.permissionMsg'));

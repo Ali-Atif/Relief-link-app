@@ -15,6 +15,7 @@ import {
 } from '../services/firebase';
 import type { CachedUser } from '../services/authCache';
 import { clearCachedUser, loadCachedUser, saveCachedUser } from '../services/authCache';
+import { getUserProfile, saveUserProfile, type UserRole } from '../services/userProfiles';
 import { getAuthErrorMessage } from '../utils/authErrors';
 
 export type AuthUser = CachedUser;
@@ -25,8 +26,16 @@ type AuthContextValue = {
   busy: boolean;
   error: string | null;
   clearError: () => void;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (input: {
+    email: string;
+    password: string;
+    role: UserRole;
+    displayName: string;
+    ngoName?: string;
+    phone?: string;
+    address?: string;
+  }) => Promise<boolean>;
   logout: () => Promise<void>;
 };
 
@@ -37,6 +46,7 @@ function mapFirebaseUser(fbUser: User): AuthUser {
     uid: fbUser.uid,
     email: fbUser.email,
     displayName: fbUser.displayName,
+    role: 'user',
   };
 }
 
@@ -46,6 +56,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const logoutInProgress = useRef(false);
+  /** While true, ignore transient Firebase session from `createUserWithEmailAndPassword` until `signOut` finishes. */
+  const registrationInProgress = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -58,7 +70,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       if (fbUser) {
-        const mapped = mapFirebaseUser(fbUser);
+        if (registrationInProgress.current) {
+          setInitializing(false);
+          return;
+        }
+        const profile = await getUserProfile(fbUser.uid);
+        const mapped: AuthUser = profile
+          ? {
+              uid: profile.uid,
+              email: profile.email,
+              displayName: profile.displayName,
+              role: profile.role,
+              ngoName: profile.ngoName,
+              phone: profile.phone,
+              address: profile.address,
+            }
+          : mapFirebaseUser(fbUser);
         setUser(mapped);
         await saveCachedUser(mapped);
       } else if (logoutInProgress.current) {
@@ -83,21 +110,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setBusy(true);
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
+      return true;
     } catch (e) {
       setError(getAuthErrorMessage(e));
+      return false;
     } finally {
       setBusy(false);
     }
   }, []);
 
-  const register = useCallback(async (email: string, password: string) => {
+  const register = useCallback(async (input: {
+    email: string;
+    password: string;
+    role: UserRole;
+    displayName: string;
+    ngoName?: string;
+    phone?: string;
+    address?: string;
+  }) => {
     setError(null);
     setBusy(true);
+    registrationInProgress.current = true;
     try {
-      await createUserWithEmailAndPassword(auth, email.trim(), password);
+      const credential = await createUserWithEmailAndPassword(auth, input.email.trim(), input.password);
+      await saveUserProfile({
+        uid: credential.user.uid,
+        email: credential.user.email,
+        role: input.role,
+        displayName: input.displayName.trim(),
+        ngoName: input.ngoName,
+        phone: input.phone,
+        address: input.address,
+      });
+      await clearCachedUser();
+      await signOut(auth);
+      return true;
     } catch (e) {
       setError(getAuthErrorMessage(e));
+      try {
+        await clearCachedUser();
+        await signOut(auth);
+      } catch {
+        /* ignore cleanup errors */
+      }
+      return false;
     } finally {
+      registrationInProgress.current = false;
       setBusy(false);
     }
   }, []);
