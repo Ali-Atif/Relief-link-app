@@ -2,34 +2,82 @@ import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { GuideBackChip } from './GuideBackChip';
 import { colors, radii, spacing } from '../utils/constants';
+import { guideDetailScrollContent } from '../utils/guideDetailChrome';
+import { blockDirection } from '../utils/layoutRtl';
+
+export type ScreenLayoutBack = {
+  label: string;
+  onPress: () => void;
+  accessibilityLabel?: string;
+};
 
 type Props = {
   title?: string;
   subtitle?: string;
   children: ReactNode;
+  /** Same gray pill as Guides — when set, screen should use `headerShown: false` on the stack. */
+  showBack?: ScreenLayoutBack;
+  /** Pass `language === 'ur' ? 'rtl' : 'ltr'` so the chip aligns like Guides. */
+  heroDirection?: 'ltr' | 'rtl';
+  /** Vertical gap between stacked children (default: roomy). Use smaller on dense home-style screens. */
+  bodyGap?: number;
+  /** Override scroll content bottom padding (e.g. less empty space above global tab bar on Home). */
+  contentPaddingBottom?: number;
 };
 
-export function ScreenLayout({ title, subtitle, children }: Props) {
+export function ScreenLayout({
+  title,
+  subtitle,
+  children,
+  showBack,
+  heroDirection = 'ltr',
+  bodyGap,
+  contentPaddingBottom,
+}: Props) {
+  const writingDirection = heroDirection === 'rtl' ? 'rtl' : 'ltr';
+  const bodyGapResolved = bodyGap ?? spacing.md + 4;
+  const scrollContent = [
+    guideDetailScrollContent,
+    ...(contentPaddingBottom != null ? [{ paddingBottom: contentPaddingBottom }] : []),
+  ];
+
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        removeClippedSubviews={false}
       >
+        {showBack ? (
+          <View style={blockDirection(heroDirection)}>
+            <GuideBackChip
+              label={showBack.label}
+              onPress={showBack.onPress}
+              accessibilityLabel={showBack.accessibilityLabel}
+            />
+          </View>
+        ) : null}
         {title ? (
-          <View style={styles.titleBlock}>
-            <View style={styles.titleAccent} />
-            <View style={styles.titleTextWrap}>
-              <Text style={styles.title}>{title}</Text>
-              {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+          <View style={blockDirection(heroDirection)}>
+            <View style={styles.titleBlock}>
+              <View style={styles.titleAccent} />
+              <View style={styles.titleTextWrap}>
+                <Text style={[styles.title, { writingDirection }]}>{title}</Text>
+                {subtitle ? (
+                  <Text style={[styles.subtitle, { writingDirection }]}>{subtitle}</Text>
+                ) : null}
+              </View>
             </View>
           </View>
-        ) : (
-          subtitle ? <Text style={styles.subtitleOnly}>{subtitle}</Text> : null
-        )}
-        <View style={styles.body}>{children}</View>
+        ) : subtitle ? (
+          <View style={blockDirection(heroDirection)}>
+            <Text style={[styles.subtitleOnly, { writingDirection }]}>{subtitle}</Text>
+          </View>
+        ) : null}
+        <View style={[styles.body, { gap: bodyGapResolved }]}>{children}</View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -39,10 +87,6 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  scroll: {
-    paddingHorizontal: spacing.md + 2,
-    paddingBottom: spacing.xl,
   },
   titleBlock: {
     flexDirection: 'row',
@@ -79,7 +123,5 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     fontWeight: '500',
   },
-  body: {
-    gap: spacing.md + 4,
-  },
+  body: {},
 });

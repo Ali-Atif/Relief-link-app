@@ -4,19 +4,26 @@ import { useCallback, useState } from 'react';
 import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { GuideBackChip } from '../components/GuideBackChip';
 import { PrimaryButton } from '../components';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useTranslatedHeader } from '../hooks/useTranslatedHeader';
 import type { EmergencyContact } from '../services/emergencyContactsStorage';
 import { getEmergencyContacts, removeEmergencyContact } from '../services/emergencyContactsStorage';
+import { dispatchResetToHome } from '../navigation/resetToHome';
 import type { RootStackParamList } from '../navigation/types';
+import { blockDirection } from '../utils/layoutRtl';
 import { colors, spacing } from '../utils/constants';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Contacts'>;
 
 export function ContactsScreen({ navigation }: Props) {
-  const { t } = useLanguage();
-  useTranslatedHeader(navigation, 'nav.contacts');
+  const { t, language } = useLanguage();
+  const direction = language === 'ur' ? 'rtl' : 'ltr';
+  const textAlign = language === 'ur' ? 'right' : 'left';
+
+  const onBack = useCallback(() => {
+    dispatchResetToHome(navigation.dispatch);
+  }, [navigation]);
 
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
 
@@ -51,9 +58,18 @@ export function ContactsScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('contacts.title')}</Text>
-        <Text style={styles.subtitle}>{t('contacts.subtitle')}</Text>
+      <View style={[styles.hero, blockDirection(direction)]}>
+        <GuideBackChip
+          label={t('guides.backToHome')}
+          onPress={onBack}
+          accessibilityLabel={t('guides.backToHome')}
+        />
+        <Text style={[styles.title, { textAlign, writingDirection: direction === 'rtl' ? 'rtl' : 'ltr' }]}>
+          {t('contacts.title')}
+        </Text>
+        <Text style={[styles.subtitle, { textAlign, writingDirection: direction === 'rtl' ? 'rtl' : 'ltr' }]}>
+          {t('contacts.subtitle')}
+        </Text>
       </View>
 
       <FlatList
@@ -98,20 +114,25 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
+  hero: {
     paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
     paddingBottom: spacing.md,
   },
   title: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: '800',
     color: colors.text,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
+    alignSelf: 'stretch',
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: 16,
+    fontWeight: '600',
     color: colors.textMuted,
-    lineHeight: 22,
+    lineHeight: 24,
+    marginBottom: spacing.md,
+    alignSelf: 'stretch',
   },
   list: {
     flex: 1,

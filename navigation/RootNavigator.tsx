@@ -1,24 +1,53 @@
+import {
+  NavigationContainer,
+  type NavigationState,
+  useNavigationContainerRef,
+} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
+import { MainBottomTabBar } from '../components/MainBottomTabBar';
 import { useAuth } from '../contexts/AuthContext';
 import { AddContactScreen } from '../screens/AddContactScreen';
 import { ContactsScreen } from '../screens/ContactsScreen';
 import { GuideDetailScreen } from '../screens/GuideDetailScreen';
 import { GuidesScreen } from '../screens/GuidesScreen';
 import { HomeScreen } from '../screens/HomeScreen';
+import { ProfileScreen } from '../screens/ProfileScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { RegisterScreen } from '../screens/RegisterScreen';
 import { QuizScreen } from '../screens/QuizScreen';
 import { ReportScreen } from '../screens/ReportScreen';
 import { SOSScreen } from '../screens/SOSScreen';
 import { colors } from '../utils/constants';
+import { getActiveRouteName } from './getActiveRouteName';
 import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
   const { user, initializing } = useAuth();
+  const navigationRef = useNavigationContainerRef<RootStackParamList>();
+  const [activeRouteName, setActiveRouteName] = useState<string | undefined>(undefined);
+
+  const syncRoute = useCallback(() => {
+    if (!navigationRef.isReady()) return;
+    setActiveRouteName(getActiveRouteName(navigationRef.getRootState()));
+  }, [navigationRef]);
+
+  const onStateChange = useCallback(
+    (state: NavigationState | undefined) => {
+      setActiveRouteName(getActiveRouteName(state));
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (user && navigationRef.isReady()) {
+      syncRoute();
+    }
+  }, [user, navigationRef, syncRoute]);
 
   if (initializing) {
     return (
@@ -29,33 +58,45 @@ export function RootNavigator() {
   }
 
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShadowVisible: false,
-        headerStyle: { backgroundColor: colors.headerBg },
-        headerTintColor: colors.headerText,
-        headerTitleStyle: { fontWeight: '700', fontSize: 18, color: colors.headerText },
-        contentStyle: { backgroundColor: colors.background },
-      }}
+    <NavigationContainer
+      ref={navigationRef}
+      onReady={syncRoute}
+      onStateChange={onStateChange}
     >
       {user == null ? (
-        <>
-          <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="Register" component={RegisterScreen} options={{ title: 'Create account' }} />
-        </>
+        <Stack.Navigator
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.background },
+          }}
+        >
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Register" component={RegisterScreen} />
+        </Stack.Navigator>
       ) : (
-        <>
-          <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'ReliefLink', headerBackVisible: false }} />
-          <Stack.Screen name="SOS" component={SOSScreen} options={{ title: 'Emergency SOS' }} />
-          <Stack.Screen name="Contacts" component={ContactsScreen} options={{ title: 'Emergency contacts' }} />
-          <Stack.Screen name="AddContact" component={AddContactScreen} options={{ title: 'Add contact' }} />
-          <Stack.Screen name="Report" component={ReportScreen} options={{ title: 'Report incident' }} />
-          <Stack.Screen name="Guides" component={GuidesScreen} options={{ title: 'Safety guides' }} />
-          <Stack.Screen name="GuideDetail" component={GuideDetailScreen} options={{ title: 'Guide' }} />
-          <Stack.Screen name="Quiz" component={QuizScreen} options={{ title: 'Awareness quiz' }} />
-        </>
+        <View style={styles.mainShell}>
+          <View style={styles.stackSlot}>
+            <Stack.Navigator
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: colors.background },
+              }}
+            >
+              <Stack.Screen name="Home" component={HomeScreen} />
+              <Stack.Screen name="Profile" component={ProfileScreen} />
+              <Stack.Screen name="SOS" component={SOSScreen} />
+              <Stack.Screen name="Contacts" component={ContactsScreen} />
+              <Stack.Screen name="AddContact" component={AddContactScreen} />
+              <Stack.Screen name="Report" component={ReportScreen} />
+              <Stack.Screen name="Guides" component={GuidesScreen} />
+              <Stack.Screen name="GuideDetail" component={GuideDetailScreen} />
+              <Stack.Screen name="Quiz" component={QuizScreen} />
+            </Stack.Navigator>
+          </View>
+          <MainBottomTabBar navigationRef={navigationRef} routeName={activeRouteName} />
+        </View>
       )}
-    </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 
@@ -65,5 +106,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: colors.background,
+  },
+  mainShell: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  stackSlot: {
+    flex: 1,
+    minHeight: 0,
   },
 });

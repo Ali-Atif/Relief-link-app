@@ -1,10 +1,9 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { PrimaryButton, ScreenLayout } from '../components';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useTranslatedHeader } from '../hooks/useTranslatedHeader';
 import { addEmergencyContact } from '../services/emergencyContactsStorage';
 import type { RootStackParamList } from '../navigation/types';
 import { colors, spacing } from '../utils/constants';
@@ -13,8 +12,16 @@ import { validatePhoneNumber } from '../utils/phoneValidation';
 type Props = NativeStackScreenProps<RootStackParamList, 'AddContact'>;
 
 export function AddContactScreen({ navigation }: Props) {
-  const { t } = useLanguage();
-  useTranslatedHeader(navigation, 'nav.addContact');
+  const { t, language } = useLanguage();
+  const heroDirection = language === 'ur' ? 'rtl' : 'ltr';
+
+  const onBack = useCallback(() => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('Contacts' as never);
+    }
+  }, [navigation]);
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -48,7 +55,16 @@ export function AddContactScreen({ navigation }: Props) {
   };
 
   return (
-    <ScreenLayout title={t('nav.addContact')} subtitle={t('addContact.subtitle')}>
+    <ScreenLayout
+      title={t('nav.addContact')}
+      subtitle={t('addContact.subtitle')}
+      showBack={{
+        label: t('contacts.backChip'),
+        onPress: onBack,
+        accessibilityLabel: t('contacts.backChip'),
+      }}
+      heroDirection={heroDirection}
+    >
       <View style={styles.field}>
         <Text style={styles.label}>{t('addContact.name')}</Text>
         <TextInput
