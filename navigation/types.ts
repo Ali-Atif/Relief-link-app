@@ -1,5 +1,8 @@
 export type RootStackParamList = {
   Login: undefined;
+  SelectRole: undefined;
+  RegisterUser: undefined;
+  RegisterNgo: undefined;
   Register: undefined;
   Home: undefined;
   SOS: undefined;
@@ -11,4 +14,4 @@ export type RootStackParamList = {
   Quiz: undefined;
 };
 
-export type AuthStackParamList = Pick<RootStackParamList, 'Login' | 'Register'>;
+export type AuthStackParamList = Pick<RootStackParamList, 'Login' | 'SelectRole' | 'RegisterUser' | 'RegisterNgo'>;

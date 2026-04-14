@@ -8,18 +8,19 @@
 
 | Area | Status |
 |------|--------|
-| **Navigation** | Native stack: auth screens + main app screens |
-| **Authentication** | **Firebase Auth** (email/password) + **AsyncStorage** cache for offline-friendly session |
+| **Navigation** | Native stack: auth screens (role selection, user/NGO registration, login) + main app screens |
+| **Authentication** | **Firebase Auth** (email/password) + **AsyncStorage** cache for offline-friendly session with **user type tracking** (User vs NGO) |
+| **Registration Flow** | **Role selection** → User Registration (name, phone, email, password) or NGO Registration (NGO name, registration number, contact person, phone, email, password) → Login |
 | **SOS** | Large **SOS** on **Home** + **SOS** screen; GPS → Google Maps link → SMS to all saved numbers |
 | **Emergency contacts** | **AsyncStorage** (offline, survives restart); **FlatList** UI; add / **delete**; **phone validation** |
 | **Survival guides** | **Flood**, **Earthquake**, **Fire** — bundled **`data/guides.json`**, **FlatList** list + detail screen; **no network** |
 | **NGO reports** | **Title**, **description**, **location**; **online** → **Firestore**; **offline** → **AsyncStorage** (`pending`); **auto + manual sync** |
-| **Connectivity** | **NetInfo** — top banner **“Online”** / **“Offline Mode”** (same rules as report submit + sync) |
+| **Connectivity** | **NetInfo** — top banner **"Online"** / **"Offline Mode"** (same rules as report submit + sync) |
 | **Quiz** | **MCQs** on flood, earthquake, fire — **`data/quiz.json`** (English + Urdu text); one question per step; **score** at end; **no network** |
 | **Languages** | **English** and **Urdu** — `LanguageProvider`, **`i18n/strings.ts`**, choice stored in **`AsyncStorage`** (`relieflink_language`); toggles on **Home** and **Login** |
-| **Screens** | Login, Register, Home, SOS, Emergency contacts, Add contact, Report, Guides, Guide detail, **Quiz** |
-| **Styling** | `utils/constants`, `ScreenLayout`, `PrimaryButton`, `SosButton` |
-| **Services** | Firebase Auth + Firestore, auth cache, contacts, SOS, guides loader, NGO queue + sync |
+| **Screens** | SelectRole, RegisterUser, RegisterNgo, Login, Home, SOS, Emergency contacts, Add contact, Report, Guides, Guide detail, **Quiz** |
+| **Styling** | `utils/constants`, `ScreenLayout`, `PrimaryButton`, `SosButton`, reusable `Input` component |
+| **Services** | Firebase Auth + Firestore, auth cache with user type, contacts, SOS, guides loader, NGO queue + sync |
 | **Metro** | `metro.config.js` enables Firebase package **exports** |
 
 ---
@@ -176,6 +177,61 @@ npx expo start --clear
 
 ---
 
+## Authentication & Registration Flow
+
+The app uses a **role-based registration flow** that starts with a selection screen:
+
+### Flow Overview
+
+```
+App Opens
+   ↓
+SelectRoleScreen (Choose: User or NGO)
+   ↓                      ↓
+RegisterUserScreen   RegisterNgoScreen
+   ↓                      ↓
+   └────→ LoginScreen ←───┘
+            ↓
+         HomeScreen (after successful login)
+```
+
+### User Registration
+
+Fields collected:
+- **Name** (min 2 characters)
+- **Phone Number** (8-15 digits)
+- **Email** (validated format)
+- **Password** (min 6 characters)
+- **Confirm Password** (must match)
+
+### NGO Registration
+
+Fields collected:
+- **NGO Name** (min 2 characters)
+- **Registration Number** (required)
+- **Contact Person Name** (min 2 characters)
+- **Phone Number** (8-15 digits)
+- **Email** (validated format)
+- **Password** (min 6 characters)
+- **Confirm Password** (must match)
+
+### User Type Tracking
+
+After registration, the user type (`user` or `ngo`) is stored in:
+- **AsyncStorage** cache (`authCache.ts`) as part of `CachedUser`
+- Used for role-specific features and UI customization
+
+### Validation
+
+All forms include:
+- **Required field checks**
+- **Email format validation** (`/^[^\s@]+@[^\s@]+\.[^\s@]+$/`)
+- **Password matching** (password must match confirm password)
+- **Phone number validation** (8-15 digits, spaces/+/- ignored)
+- **Real-time error clearing** (errors clear as user types)
+
+---
+
 ## Authentication & offline (short)
 
 - After a successful Firebase sign-in, a small user profile is cached in AsyncStorage (`authCache.ts`).
@@ -193,16 +249,20 @@ npx expo start --clear
 │   ├── guides.json             # Offline survival guides (Flood, Earthquake, Fire)
 │   └── quiz.json               # Bilingual MCQs (en / ur per question)
 ├── contexts/
-│   ├── AuthContext.tsx
+│   ├── AuthContext.tsx         # Auth with user type tracking (user/ngo)
 │   └── LanguageContext.tsx
 ├── i18n/
-│   ├── strings.ts              # English + Urdu UI copy
+│   ├── strings.ts              # English + Urdu UI copy (includes registration strings)
 │   └── types.ts
 ├── hooks/useSosEmergency.ts
 ├── hooks/useNetInfoConnectivity.ts
 ├── hooks/useTranslatedHeader.ts
 ├── navigation/
 ├── screens/
+│   ├── SelectRoleScreen.tsx    # First screen: choose User or NGO registration
+│   ├── RegisterUserScreen.tsx  # User registration (name, phone, email, password)
+│   ├── RegisterNgoScreen.tsx   # NGO registration (full org details)
+│   ├── LoginScreen.tsx         # Login with email/password + navigation to SelectRole
 │   ├── HomeScreen.tsx          # Large SosButton
 │   ├── ContactsScreen.tsx      # FlatList + delete
 │   ├── AddContactScreen.tsx    # Validation
@@ -212,12 +272,14 @@ npx expo start --clear
 │   ├── QuizScreen.tsx          # Offline MCQ flow + score
 │   └── …
 ├── components/
+│   ├── Input.tsx               # Reusable input component with validation
 │   ├── SosButton.tsx
 │   ├── NgoReportsSyncBridge.tsx
 │   ├── ConnectivityBanner.tsx
 │   └── …
 ├── services/
 │   ├── firebase.ts             # app, auth, db
+│   ├── authCache.ts            # CachedUser with userType field
 │   ├── guides.ts
 │   ├── quiz.ts
 │   ├── languageStorage.ts

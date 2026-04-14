@@ -6,10 +6,10 @@ import { PrimaryButton, ScreenLayout } from '../components';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTranslatedHeader } from '../hooks/useTranslatedHeader';
-import type { AuthStackParamList } from '../navigation/types';
+import type { RootStackParamList } from '../navigation/types';
 import { colors, spacing } from '../utils/constants';
 
-type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
 
 export function RegisterScreen({ navigation }: Props) {
   const { register, error, clearError, busy } = useAuth();

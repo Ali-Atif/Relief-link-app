@@ -8,7 +8,9 @@ import { GuideDetailScreen } from '../screens/GuideDetailScreen';
 import { GuidesScreen } from '../screens/GuidesScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { LoginScreen } from '../screens/LoginScreen';
-import { RegisterScreen } from '../screens/RegisterScreen';
+import { RegisterNgoScreen } from '../screens/RegisterNgoScreen';
+import { RegisterUserScreen } from '../screens/RegisterUserScreen';
+import { SelectRoleScreen } from '../screens/SelectRoleScreen';
 import { QuizScreen } from '../screens/QuizScreen';
 import { ReportScreen } from '../screens/ReportScreen';
 import { SOSScreen } from '../screens/SOSScreen';
@@ -28,8 +30,12 @@ export function RootNavigator() {
     );
   }
 
+  // Determine initial route based on auth state
+  const initialRoute = user ? 'Home' : 'SelectRole';
+
   return (
     <Stack.Navigator
+      initialRouteName={initialRoute}
       screenOptions={{
         headerShadowVisible: false,
         headerStyle: { backgroundColor: colors.headerBg },
@@ -38,23 +44,22 @@ export function RootNavigator() {
         contentStyle: { backgroundColor: colors.background },
       }}
     >
-      {user == null ? (
-        <>
-          <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="Register" component={RegisterScreen} options={{ title: 'Create account' }} />
-        </>
-      ) : (
-        <>
-          <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'ReliefLink', headerBackVisible: false }} />
-          <Stack.Screen name="SOS" component={SOSScreen} options={{ title: 'Emergency SOS' }} />
-          <Stack.Screen name="Contacts" component={ContactsScreen} options={{ title: 'Emergency contacts' }} />
-          <Stack.Screen name="AddContact" component={AddContactScreen} options={{ title: 'Add contact' }} />
-          <Stack.Screen name="Report" component={ReportScreen} options={{ title: 'Report incident' }} />
-          <Stack.Screen name="Guides" component={GuidesScreen} options={{ title: 'Safety guides' }} />
-          <Stack.Screen name="GuideDetail" component={GuideDetailScreen} options={{ title: 'Guide' }} />
-          <Stack.Screen name="Quiz" component={QuizScreen} options={{ title: 'Awareness quiz' }} />
-        </>
-      )}
+      {/* ALL screens registered here - no conditional rendering */}
+      {/* Auth screens */}
+      <Stack.Screen name="SelectRole" component={SelectRoleScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="RegisterUser" component={RegisterUserScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="RegisterNgo" component={RegisterNgoScreen} options={{ headerShown: false }} />
+
+      {/* App screens */}
+      <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'ReliefLink', headerBackVisible: false }} />
+      <Stack.Screen name="SOS" component={SOSScreen} options={{ title: 'Emergency SOS' }} />
+      <Stack.Screen name="Contacts" component={ContactsScreen} options={{ title: 'Emergency contacts' }} />
+      <Stack.Screen name="AddContact" component={AddContactScreen} options={{ title: 'Add contact' }} />
+      <Stack.Screen name="Report" component={ReportScreen} options={{ title: 'Report incident' }} />
+      <Stack.Screen name="Guides" component={GuidesScreen} options={{ title: 'Safety guides' }} />
+      <Stack.Screen name="GuideDetail" component={GuideDetailScreen} options={{ title: 'Guide' }} />
+      <Stack.Screen name="Quiz" component={QuizScreen} options={{ title: 'Awareness quiz' }} />
     </Stack.Navigator>
   );
 }

@@ -13,7 +13,7 @@ import {
   signOut,
   type User,
 } from '../services/firebase';
-import type { CachedUser } from '../services/authCache';
+import type { CachedUser, UserType } from '../services/authCache';
 import { clearCachedUser, loadCachedUser, saveCachedUser } from '../services/authCache';
 import { getAuthErrorMessage } from '../utils/authErrors';
 
@@ -27,16 +27,28 @@ type AuthContextValue = {
   clearError: () => void;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
+  /** Register a regular user with name, phone, email, password */
+  registerUser: (name: string, phone: string, email: string, password: string) => Promise<boolean>;
+  /** Register an NGO with full details */
+  registerNgo: (
+    ngoName: string,
+    registrationNumber: string,
+    contactPerson: string,
+    phone: string,
+    email: string,
+    password: string,
+  ) => Promise<boolean>;
   logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-function mapFirebaseUser(fbUser: User): AuthUser {
+function mapFirebaseUser(fbUser: User, userType?: UserType): AuthUser {
   return {
     uid: fbUser.uid,
     email: fbUser.email,
     displayName: fbUser.displayName,
+    userType,
   };
 }
 
@@ -102,6 +114,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const registerUser = useCallback(async (name: string, _phone: string, email: string, password: string): Promise<boolean> => {
+    setError(null);
+    setBusy(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      // Save user type in cache
+      const cachedUser: CachedUser = {
+        uid: userCredential.user.uid,
+        email: userCredential.user.email,
+        displayName: name,
+        userType: 'user',
+      };
+      await saveCachedUser(cachedUser);
+      return true;
+    } catch (e) {
+      setError(getAuthErrorMessage(e));
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  const registerNgo = useCallback(async (
+    ngoName: string,
+    _registrationNumber: string,
+    _contactPerson: string,
+    _phone: string,
+    email: string,
+    password: string,
+  ): Promise<boolean> => {
+    setError(null);
+    setBusy(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      // Save NGO type in cache
+      const cachedUser: CachedUser = {
+        uid: userCredential.user.uid,
+        email: userCredential.user.email,
+        displayName: ngoName,
+        userType: 'ngo',
+      };
+      await saveCachedUser(cachedUser);
+      return true;
+    } catch (e) {
+      setError(getAuthErrorMessage(e));
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
   const logout = useCallback(async () => {
     setError(null);
     logoutInProgress.current = true;
@@ -127,9 +190,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearError,
       login,
       register,
+      registerUser,
+      registerNgo,
       logout,
     }),
-    [user, initializing, busy, error, clearError, login, register, logout],
+    [user, initializing, busy, error, clearError, login, register, registerUser, registerNgo, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

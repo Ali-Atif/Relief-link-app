@@ -3,10 +3,14 @@ import { removeItem, setItem, getItem } from './storage';
 /** AsyncStorage key for a small JSON snapshot of the signed-in user (offline-friendly). */
 export const CACHED_USER_KEY = 'relieflink_cached_user';
 
+export type UserType = 'user' | 'ngo';
+
 export type CachedUser = {
   uid: string;
   email: string | null;
   displayName?: string | null;
+  /** Account type: 'user' for regular users, 'ngo' for organizations */
+  userType?: UserType;
 };
 
 export async function saveCachedUser(user: CachedUser): Promise<void> {
