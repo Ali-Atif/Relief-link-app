@@ -5,13 +5,12 @@ import { I18nManager, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ScreenLayout, SosButton } from '../components';
 import QuickTile from '../components/newUI/QuickTile';
-import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { spacing, radii, colors } from '../utils/constants';
+import { blockDirection, flexRowWithDirection } from '../utils/layoutRtl';
+import { colors, radii, spacing } from '../utils/constants';
 
 export function HomeScreen() {
   const navigation = useNavigation();
-  const { user, logout, busy } = useAuth();
   const { language, toggleLanguage, t } = useLanguage();
 
   // Handle RTL for Urdu
@@ -32,41 +31,33 @@ export function HomeScreen() {
   const direction = language === 'ur' ? 'rtl' : 'ltr';
 
   return (
-    <ScreenLayout>
-      {/* Language & Account Section - at top */}
-      <View style={styles.settingsCard}>
-        <View style={styles.settingRow}>
-          <View>
-            <Text style={styles.settingLabel}>{t('home.language')}</Text>
-          </View>
+    <ScreenLayout bodyGap={spacing.sm + 4} contentPaddingBottom={spacing.md + spacing.sm}>
+      <View style={[styles.brandRow, flexRowWithDirection(direction)]}>
+        <Text style={[styles.brandTitle, { textAlign }]} numberOfLines={1}>
+          {t('nav.reliefLink')}
+        </Text>
+        <View style={styles.headerActions}>
           <Pressable
-            style={({ pressed }) => [styles.langToggle, pressed && styles.langTogglePressed]}
             onPress={handleLanguageToggle}
+            style={({ pressed }) => [styles.headerIconBtn, pressed && styles.headerIconBtnPressed]}
+            accessibilityRole="button"
+            accessibilityLabel={t('home.toggleLanguageA11y')}
           >
-            <Text style={styles.langText}>{language === 'en' ? 'English' : 'اردو'}</Text>
+            <Ionicons name="language-outline" size={24} color={colors.primaryDark} />
+          </Pressable>
+          <Pressable
+            onPress={() => navigation.navigate('Profile' as never)}
+            style={({ pressed }) => [styles.headerIconBtn, pressed && styles.headerIconBtnPressed]}
+            accessibilityRole="button"
+            accessibilityLabel={t('home.openProfileA11y')}
+          >
+            <Ionicons name="person-circle-outline" size={28} color={colors.primaryDark} />
           </Pressable>
         </View>
-
-        {user && (
-          <>
-            <View style={styles.divider} />
-            <View style={styles.settingRow}>
-              <Text style={styles.userEmail}>{user.email}</Text>
-              <Pressable
-                style={({ pressed }) => [styles.signOutButton, pressed && styles.signOutButtonPressed]}
-                onPress={logout}
-                disabled={busy}
-              >
-                <Ionicons name="log-out" size={14} color="#fff" />
-                <Text style={styles.signOutText}>{busy ? t('home.signingOut') : t('home.signOut')}</Text>
-              </Pressable>
-            </View>
-          </>
-        )}
       </View>
 
       {/* Welcome banner (only on Home) */}
-      <View style={[styles.welcomeCard, { direction }]}>
+      <View style={[styles.welcomeCard, blockDirection(direction)]}>
         <View style={styles.welcomeLeft}>
           <Text style={[styles.welcomeTitle, { textAlign }]}>{t('home.welcomeTitle')}</Text>
           <Text style={[styles.welcomeSubtitle, { textAlign }]} numberOfLines={2}>
@@ -85,7 +76,7 @@ export function HomeScreen() {
       />
 
       {/* Quick Access grid */}
-      <View style={{ direction }}>
+      <View style={blockDirection(direction)}>
         <Text style={[styles.sectionTitle, { textAlign }]}>{t('home.quickAccess')}</Text>
           <View style={styles.grid}>
             <View style={styles.col}>
@@ -94,7 +85,6 @@ export function HomeScreen() {
                 subtitle={t('home.learnSafetyProcedure')}
                 icon="book"
                 color="#2563eb"
-                badge="6 Guides"
                 onPress={() => navigation.navigate('Guides' as never)}
               />
             </View>
@@ -104,7 +94,6 @@ export function HomeScreen() {
                 subtitle={t('home.emergencyMedicalHelp')}
                 icon="heart"
                 color="#ef4444"
-                badge="1 Tutorial"
                 onPress={() => navigation.navigate('Report' as never)}
               />
             </View>
@@ -114,7 +103,6 @@ export function HomeScreen() {
                 subtitle={t('home.quickEmergencyAccess')}
                 icon="warning"
                 color="#f97316"
-                badge="Instant"
                 onPress={() => navigation.navigate('SOS' as never)}
               />
             </View>
@@ -124,15 +112,23 @@ export function HomeScreen() {
                 subtitle={t('home.familyChecklist')}
                 icon="list"
                 color="#10b981"
-                badge="10 Items"
                 onPress={() => navigation.navigate('Contacts' as never)}
+              />
+            </View>
+            <View style={styles.col}>
+              <QuickTile
+                title={t('home.tabQuiz')}
+                subtitle={t('home.quizQuickSubtitle')}
+                icon="school"
+                color="#8b5cf6"
+                onPress={() => navigation.navigate('Quiz' as never)}
               />
             </View>
           </View>
       </View>
 
       {/* Safety Tip of the Day */}
-      <View style={[styles.tipCard, { direction }]}>
+      <View style={[styles.tipCard, flexRowWithDirection(direction)]}>
         <View style={styles.tipIcon}>
           <Ionicons name="bulb" size={22} color="#744210" />
         </View>
@@ -145,7 +141,7 @@ export function HomeScreen() {
       </View>
 
       {/* Why Use This App */}
-      <View style={[styles.whyCard, { direction }]}>
+      <View style={[styles.whyCard, blockDirection(direction)]}>
         <Text style={[styles.whyTitle, { textAlign }]}>{t('home.whyUseTitle')}</Text>
         <View style={styles.whyList}>
           <Text style={[styles.bullet, { textAlign }]}>{t('home.whyUseBullet1')}</Text>
@@ -155,43 +151,47 @@ export function HomeScreen() {
         </View>
       </View>
 
-      {/* Footer */}
-      <View style={[styles.footer, { direction }]}>
+      {/* Footer note — tab bar is global (see RootNavigator). */}
+      <View style={[styles.footer, blockDirection(direction)]}>
         <Text style={[styles.footerText, { textAlign }]}>{t('home.footerText')}</Text>
-      </View>
-
-      <View style={[styles.bottomTabs, { direction }]}>
-        {[
-          { label: t('home.tabHome'), icon: 'home', screen: 'Home', active: true },
-          { label: t('home.tabGuides'), icon: 'book', screen: 'Guides' },
-          { label: t('home.tabReports'), icon: 'medkit', screen: 'Report' },
-          { label: t('home.tabChecklist'), icon: 'checkmark-circle', screen: 'Contacts' },
-          { label: t('home.tabSOS'), icon: 'warning', screen: 'SOS' },
-          { label: t('home.tabQuiz'), icon: 'help-circle', screen: 'Quiz' },
-        ].map((item) => (
-          <Pressable
-            key={item.label}
-            style={({ pressed }) => [
-              styles.tabItem,
-              item.active && styles.tabItemActive,
-              pressed && styles.tabItemPressed,
-            ]}
-            onPress={() => navigation.navigate(item.screen as never)}
-          >
-            <Ionicons
-              name={item.icon as any}
-              size={22}
-              color={item.active ? colors.primary : colors.textMuted}
-            />
-            <Text style={[styles.tabLabel, item.active && styles.tabLabelActive]}>{item.label}</Text>
-          </Pressable>
-        ))}
       </View>
     </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
+  brandRow: {
+    alignSelf: 'stretch',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  brandTitle: {
+    flex: 1,
+    fontSize: 20,
+    fontWeight: '800',
+    color: colors.text,
+    letterSpacing: -0.3,
+    minWidth: 0,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  headerIconBtn: {
+    padding: spacing.sm,
+    borderRadius: radii.md,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  headerIconBtnPressed: {
+    opacity: 0.82,
+    backgroundColor: colors.surfaceMuted,
+  },
   welcomeCard: {
     borderRadius: radii.lg,
     padding: spacing.md,
@@ -230,17 +230,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   sectionTitle: {
-    marginTop: spacing.md,
+    marginTop: 0,
     fontSize: 15,
     fontWeight: '700',
     color: colors.text,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     marginHorizontal: -spacing.xs,
+    paddingTop: 0,
+    paddingBottom: spacing.xs,
   },
   col: {
     flexBasis: '48%',
@@ -281,7 +283,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   whyCard: {
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
     backgroundColor: colors.surface,
     borderRadius: radii.md,
     padding: spacing.md,
@@ -291,7 +293,7 @@ const styles = StyleSheet.create({
   whyTitle: {
     fontSize: 15,
     fontWeight: '800',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
   whyList: {
     gap: spacing.xs,
@@ -300,115 +302,15 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 13,
   },
-  settingsCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.md,
-    padding: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.md,
-  },
-  settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.xs,
-  },
-  settingLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  userEmail: {
-    fontSize: 12,
-    color: colors.textMuted,
-    fontWeight: '600',
-  },
-  langToggle: {
-    backgroundColor: colors.primaryLight,
-    paddingVertical: 4,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radii.md,
-  },
-  langTogglePressed: {
-    opacity: 0.8,
-  },
-  langText: {
-    fontWeight: '700',
-    fontSize: 12,
-    color: colors.primaryDark,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginVertical: spacing.xs,
-  },
-  signOutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radii.md,
-    backgroundColor: '#dc2626',
-    gap: 4,
-  },
-  signOutButtonPressed: {
-    opacity: 0.8,
-  },
-  signOutText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 11,
-  },
   footer: {
-    marginTop: spacing.md,
-    padding: spacing.md,
+    marginTop: spacing.sm,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
     alignItems: 'center',
   },
   footerText: {
     color: colors.textMuted,
     fontSize: 13,
-  },
-  bottomTabs: {
-    marginTop: spacing.md,
-    borderRadius: radii.xl,
-    backgroundColor: colors.surface,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    padding: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  tabItem: {
-    width: '32%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  tabItemActive: {
-    backgroundColor: colors.primaryLight,
-    borderRadius: radii.lg,
-  },
-  tabItemPressed: {
-    opacity: 0.7,
-  },
-  tabLabel: {
-    marginTop: 6,
-    fontSize: 11,
-    color: colors.textMuted,
-    textAlign: 'center',
-  },
-  tabLabelActive: {
-    color: colors.primaryDark,
-    fontWeight: '700',
   },
 });
 

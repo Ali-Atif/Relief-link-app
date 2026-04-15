@@ -1,11 +1,10 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { PrimaryButton, ScreenLayout } from '../components';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useTranslatedHeader } from '../hooks/useTranslatedHeader';
 import type { AuthStackParamList } from '../navigation/types';
 import { colors, spacing } from '../utils/constants';
 
@@ -13,13 +12,16 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 
 export function RegisterScreen({ navigation }: Props) {
   const { register, error, clearError, busy } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const heroDirection = language === 'ur' ? 'rtl' : 'ltr';
+
+  const onBack = useCallback(() => {
+    navigation.navigate('Login');
+  }, [navigation]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
-
-  useTranslatedHeader(navigation, 'auth.registerScreenTitle');
 
   useEffect(() => {
     const unsub = navigation.addListener('focus', () => {
@@ -45,7 +47,16 @@ export function RegisterScreen({ navigation }: Props) {
   const displayError = localError ?? error;
 
   return (
-    <ScreenLayout title={t('auth.registerScreenTitle')} subtitle={t('auth.registerSubtitle')}>
+    <ScreenLayout
+      title={t('auth.registerScreenTitle')}
+      subtitle={t('auth.registerSubtitle')}
+      showBack={{
+        label: t('auth.backToSignIn'),
+        onPress: onBack,
+        accessibilityLabel: t('auth.backToSignIn'),
+      }}
+      heroDirection={heroDirection}
+    >
       {displayError ? <Text style={styles.error}>{displayError}</Text> : null}
 
       <View style={styles.field}>

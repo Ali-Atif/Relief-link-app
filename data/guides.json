@@ -1,59 +1,248 @@
 [
   {
     "id": "flood",
-    "title": "Flood",
-    "summary": "Get to high ground. Never enter moving or deep water.",
-    "sections": [
-      {
-        "heading": "If flooding is happening now",
-        "body": "Move to the highest safe floor or roof. Avoid basements and elevators.\n\nDo not walk or drive through flood water. As little as 15 cm (6 in) of moving water can knock you down; vehicles can be swept away.\n\nTurn off electricity at the main breaker only if you can reach it without standing in water.\n\nListen to local alerts. Follow evacuation orders immediately."
-      },
-      {
-        "heading": "After the flood",
-        "body": "Return home only when authorities say it is safe.\n\nAssume flood water is contaminated. Wash hands often; disinfect anything that touched flood water before using it for food.\n\nDocument damage with photos for insurance if you can do so safely.\n\nWatch for weakened floors, walls, and downed power lines."
-      },
-      {
-        "heading": "Prepare ahead",
-        "body": "Know your evacuation routes and meeting point for your household.\n\nKeep copies of important documents in a waterproof bag.\n\nPack a go-bag: water, food, medications, flashlight, radio, phone charger, first aid."
-      }
-    ]
+    "icon": "water",
+    "color": "#2563eb",
+    "en": {
+      "title": "Flood",
+      "summary": "Get to high ground. Never enter moving or deep water.",
+      "sections": [
+        {
+          "heading": "If flooding is happening now",
+          "body": "Move to the highest safe floor or roof. Avoid basements and elevators.\n\nDo not walk or drive through flood water. As little as 15 cm (6 in) of moving water can knock you down; vehicles can be swept away.\n\nTurn off electricity at the main breaker only if you can reach it without standing in water.\n\nListen to local alerts. Follow evacuation orders immediately."
+        },
+        {
+          "heading": "After the flood",
+          "body": "Return home only when authorities say it is safe.\n\nAssume flood water is contaminated. Wash hands often; disinfect anything that touched flood water before using it for food.\n\nDocument damage with photos for insurance if you can do so safely.\n\nWatch for weakened floors, walls, and downed power lines."
+        },
+        {
+          "heading": "Prepare ahead",
+          "body": "Know your evacuation routes and meeting point for your household.\n\nKeep copies of important documents in a waterproof bag.\n\nPack a go-bag: water, food, medications, flashlight, radio, phone charger, first aid."
+        }
+      ]
+    },
+    "ur": {
+      "title": "سیلاب",
+      "summary": "بلند محفوظ جگہ پر جائیں۔ بہتے یا گہرے پانی میں نہ جائیں۔",
+      "sections": [
+        {
+          "heading": "اگر ابھی سیلاب آ رہا ہے",
+          "body": "بلند ترین محفوظ منزل یا چھت پر جائیں۔ تہ خانے اور لفٹ سے پرہیز کریں۔\n\nسیلابی پانی میں پیدل یا گاڑی سے نہ گزریں۔ صرف 15 سینٹی میٹر (6 انچ) بہتا پانی آپ کو گر سکتا ہے؛ گاڑیاں بہہ جاتی ہیں۔\n\nبجلی کا مین سوئچ صرف تب بند کریں جب آپ بغیر پانی میں کھڑے ہوئے تک پہنچ سکیں۔\n\nمقامی الرٹ سنیں۔ نقل مکانی کے احکامات فوری مانیں۔"
+        },
+        {
+          "heading": "سلاب کے بعد",
+          "body": "صرف اس وقت گھر واپس جائیں جب حکام محفوظ قرار دیں۔\n\nسیلابی پانی آلودہ سمجھیں۔ بار بار ہاتھ دھوئیں؛ کھانے سے پہلے سیلاب کے پانی سے لگنے والی چیزیں صاف کریں۔\n\nاگر محفوظ طریقے سے ممکن ہو تو انشورنس کے لیے نقصان کی تصاویر بنائیں۔\n\nکمزور فرش، دیواریں اور گرے ہوئے بجلی کے تاروں سے محتاط رہیں۔"
+        },
+        {
+          "heading": "پہلے سے تیاری",
+          "body": "نقل مکانی کے راستے اور گھرانے کے لیے ملاقاتی مقام یاد رکھیں۔\n\nاہم دستاویز کی نقلیں واٹر پروف بیگ میں رکھیں۔\n\nگو بیگ تیار رکھیں: پانی، کھانا، ادویات، ٹارچ، ریڈیو، فون چارجر، فرسٹ ایڈ۔"
+        }
+      ]
+    }
   },
   {
     "id": "earthquake",
-    "title": "Earthquake",
-    "summary": "Drop, Cover, and Hold On. Protect your head and neck.",
-    "sections": [
-      {
-        "heading": "During shaking",
-        "body": "DROP to your hands and knees. COVER your head and neck under a sturdy table or desk if possible. HOLD ON until shaking stops.\n\nIf no shelter is nearby, crawl away from windows and objects that can fall. Cover your head with your arms.\n\nStay inside until shaking stops. Do not run outside during strong shaking.\n\nIf you are in bed, stay there and cover your head with a pillow."
-      },
-      {
-        "heading": "If you are outdoors or in a vehicle",
-        "body": "Move to clear space away from buildings, trees, power lines, and cliffs. Drop and cover your head.\n\nIn a vehicle: pull over safely, set parking brake, stay inside until shaking stops. Avoid overpasses and bridges."
-      },
-      {
-        "heading": "After the earthquake",
-        "body": "Expect aftershocks. Each time, Drop, Cover, and Hold On.\n\nCheck yourself and others for injuries. Do not move seriously injured people unless they are in immediate danger.\n\nIf you smell gas or see sparks, leave the building if you can do so safely.\n\nUse text messages instead of voice calls to reduce network load."
-      }
-    ]
+    "icon": "pulse",
+    "color": "#57534e",
+    "en": {
+      "title": "Earthquake",
+      "summary": "Drop, Cover, and Hold On. Protect your head and neck.",
+      "sections": [
+        {
+          "heading": "During shaking",
+          "body": "DROP to your hands and knees. COVER your head and neck under a sturdy table or desk if possible. HOLD ON until shaking stops.\n\nIf no shelter is nearby, crawl away from windows and objects that can fall. Cover your head with your arms.\n\nStay inside until shaking stops. Do not run outside during strong shaking.\n\nIf you are in bed, stay there and cover your head with a pillow."
+        },
+        {
+          "heading": "If you are outdoors or in a vehicle",
+          "body": "Move to clear space away from buildings, trees, power lines, and cliffs. Drop and cover your head.\n\nIn a vehicle: pull over safely, set parking brake, stay inside until shaking stops. Avoid overpasses and bridges."
+        },
+        {
+          "heading": "After the earthquake",
+          "body": "Expect aftershocks. Each time, Drop, Cover, and Hold On.\n\nCheck yourself and others for injuries. Do not move seriously injured people unless they are in immediate danger.\n\nIf you smell gas or see sparks, leave the building if you can do so safely.\n\nUse text messages instead of voice calls to reduce network load."
+        }
+      ]
+    },
+    "ur": {
+      "title": "زلزلہ",
+      "summary": "نیچے بیٹھیں، سر ڈھانپیں، پکڑ کر رہیں۔ سر اور گردن محفوظ رکھیں۔",
+      "sections": [
+        {
+          "heading": "لرزش کے دوران",
+          "body": "ہاتھ گھٹنوں پر آ کر نیچے بیٹھیں۔ ممکن ہو تو مضبوط میز کے نیچے سر اور گردن ڈھانپیں۔ لرزش رکنے تک پکڑے رہیں۔\n\nاگر قریب پناہ نہ ہو تو کھڑکیوں اور گرنے والی چیزوں سے دور رینگتے جائیں۔ بازوؤں سے سر ڈھانپیں۔\n\nلرزش رکنے تک اندر رہیں۔ تیز لرزش کے دوران باہر نہ بھاگیں۔\n\nاگر بستر پر ہیں تو وہیں رہیں اور تکیے سے سر ڈھانپیں۔"
+        },
+        {
+          "heading": "باہر یا گاڑی میں ہوں تو",
+          "body": "عمارتوں، درختوں، بجلی کے تاروں اور چٹانوں سے دور کھلی جگہ پر جائیں۔ نیچے بیٹھ کر سر ڈھانپیں۔\n\nگاڑی میں: محفوظ جگہ کنارے لگائیں، ہینڈ بریک لگائیں، لرزش رکنے تک اندر رہیں۔ فل اوور اور پلوں سے پرہیز کریں۔"
+        },
+        {
+          "heading": "زلزلے کے بعد",
+          "body": "بعدی جھٹکوں کی توقع رکھیں۔ ہر دفعہ نیچے، ڈھانپیں، پکڑیں۔\n\nاپنا اور دوسروں کا جائزہ لیں۔ سنگین زخمیوں کو نہ ہلائیں جب تک فوری خطرہ نہ ہو۔\n\nگیس کی بو یا چنگاریاں ہوں تو محفوظ طریقے سے عمارت چھوڑ دیں۔\n\nنیٹ ورک کم دباؤ کے لیے وائس کے بجائے ٹیکسٹ پیغام استعمال کریں۔"
+        }
+      ]
+    }
   },
   {
     "id": "fire",
-    "title": "Fire",
-    "summary": "Get out fast. Stay low under smoke. Never go back inside.",
-    "sections": [
-      {
-        "heading": "If there is a fire in the building",
-        "body": "Leave immediately. Use stairs, not elevators. Close doors behind you to slow the spread of fire and smoke.\n\nIf smoke is thick, crawl low where air is clearer.\n\nFeel doors before opening: if hot, use another exit. If your only exit is blocked, stay in a room with the door closed, seal gaps with cloth, and signal from a window.\n\nOnce outside, go to your meeting place and call emergency services. Do not re-enter for people or pets—tell firefighters."
-      },
-      {
-        "heading": "If your clothes catch fire",
-        "body": "STOP, DROP, and ROLL: stop moving, drop to the ground, and roll back and forth to smother flames. Cover your face with your hands."
-      },
-      {
-        "heading": "Prevention and planning",
-        "body": "Test smoke alarms monthly. Keep exits and escape routes clear.\n\nPlan two ways out of every room and a family meeting place outside.\n\nLearn how to use a fire extinguisher only if the fire is small and you have a clear escape path; otherwise evacuate."
-      }
-    ]
+    "icon": "flame",
+    "color": "#ef4444",
+    "en": {
+      "title": "Fire",
+      "summary": "Get out fast. Stay low under smoke. Never go back inside.",
+      "sections": [
+        {
+          "heading": "If there is a fire in the building",
+          "body": "Leave immediately. Use stairs, not elevators. Close doors behind you to slow the spread of fire and smoke.\n\nIf smoke is thick, crawl low where air is clearer.\n\nFeel doors before opening: if hot, use another exit. If your only exit is blocked, stay in a room with the door closed, seal gaps with cloth, and signal from a window.\n\nOnce outside, go to your meeting place and call emergency services. Do not re-enter for people or pets—tell firefighters."
+        },
+        {
+          "heading": "If your clothes catch fire",
+          "body": "STOP, DROP, and ROLL: stop moving, drop to the ground, and roll back and forth to smother flames. Cover your face with your hands."
+        },
+        {
+          "heading": "Prevention and planning",
+          "body": "Test smoke alarms monthly. Keep exits and escape routes clear.\n\nPlan two ways out of every room and a family meeting place outside.\n\nLearn how to use a fire extinguisher only if the fire is small and you have a clear escape path; otherwise evacuate."
+        }
+      ]
+    },
+    "ur": {
+      "title": "آگ",
+      "summary": "فوری نکلیں۔ دھوئیں میں نیچے رہیں۔ دوبارہ اندر نہ جائیں۔",
+      "sections": [
+        {
+          "heading": "عمارت میں آگ لگے تو",
+          "body": "فوراً نکلیں۔ سیڑھی استعمال کریں، لفٹ نہیں۔ دروازے بند کرتے جائیں تاکہ آگ اور دھواں کم پھیلے۔\n\nدھواں گہرا ہو تو جہاں ہوا صاف ہو وہاں نیچے رینگتے نکلیں۔\n\nدروازہ کھولنے سے پہلے چھوئیں: گرم ہو تو دوسرا راستہ۔ اگر راستہ بند ہو تو کمرے میں در بند رکھیں، درز کپڑے سے بند کریں، کھڑکی سے سگنل دیں۔\n\nباہر ملاقاتی مقام پر جائیں اور ایمرجنسی کو کال کریں۔ لوگوں یا جانوروں کے لیے واپس نہ جائیں— فائر فائٹرز کو بتائیں۔"
+        },
+        {
+          "heading": "کپڑوں پر آگ لگ جائے",
+          "body": "رکیں، زمین پر لیٹیں، لوٹیں: حرکت بند کریں، زمین پر گریں، آگ بجھانے کے لیے لوٹتے رہیں۔ ہاتھوں سے چہرہ ڈھانپیں۔"
+        },
+        {
+          "heading": "احتیاط اور منصوبہ",
+          "body": "دھواں الارم ہر ماہ چیک کریں۔ نکلنے کے راستے صاف رکھیں۔\n\nہر کمرے کے دو نکلنے کے راستے اور باہر ملاقاتی مقام طے کریں۔\n\nفائر ایکسٹنگوشر صرف چھوٹی آگ اور واضح نکلنے کا راستہ ہو تو؛ ورنہ فوری نکلیں۔"
+        }
+      ]
+    }
+  },
+  {
+    "id": "cyclone",
+    "icon": "thunderstorm",
+    "color": "#0ea5e9",
+    "en": {
+      "title": "Cyclone / severe storm",
+      "summary": "Secure loose items, stay indoors away from windows, and follow evacuation orders.",
+      "sections": [
+        {
+          "heading": "Before the storm arrives",
+          "body": "Bring outdoor furniture, bins, and loose objects inside or tie them down.\n\nCharge phones and a power bank. Fill clean water containers.\n\nKnow the nearest safe shelter or strong building on higher ground if you live near the coast or in low-lying areas.\n\nKeep a battery radio or offline alerts if available."
+        },
+        {
+          "heading": "During strong wind and rain",
+          "body": "Stay in the strongest part of the building, away from windows and glass doors.\n\nDo not go outside to “watch” the storm. Flying debris causes most injuries.\n\nIf the roof or walls fail, shelter under a solid table or mattress covering your head.\n\nAvoid using wired landline phones during lightning; prefer mobile on speaker indoors."
+        },
+        {
+          "heading": "After the storm",
+          "body": "Watch for downed power lines, broken glass, and unstable structures.\n\nDo not wade in flood water near the coast—it may hide holes or currents.\n\nUse photos to document damage for authorities or insurance when safe.\n\nHelp neighbours only if you can do so without risk."
+        }
+      ]
+    },
+    "ur": {
+      "title": "سمندری طوفان / شدید طوفان",
+      "summary": "کھلی چیزیں محفوظ کریں، کھڑکیوں سے دور اندر رہیں، نقل مکانی کے احکام مانیں۔",
+      "sections": [
+        {
+          "heading": "طوفان آنے سے پہلے",
+          "body": "بیرونی فرنیچر، ڈبے اور کھلی چیزیں اندر لائیں یا باندھ دیں۔\n\nفون اور پاور بینک چارج کریں۔ صاف پانی کے برتن بھریں۔\n\nاگر ساحل یا نچلی زمین پر رہتے ہیں تو بلند محفوظ پناہ یا مضبوط عمارت کا پتہ رکھیں۔\n\nبیٹری والا ریڈیو یا آف لائن الرٹ رکھیں اگر دستیاب ہو۔"
+        },
+        {
+          "heading": "تیز ہوا اور بارش کے دوران",
+          "body": "عمارت کے مضبوط حصے میں رہیں، کھڑکیوں اور شیشے کے دروازوں سے دور۔\n\nطوفان “دیکھنے” باہر نہ جائیں۔ اڑنے والی چیزیں زیادہ چوٹ کا سبب بنتی ہیں۔\n\nچھت یا دیواریں خطرناک ہوں تو مضبوط میز یا گدا کے نیچے سر ڈھانپ کر پناہ لیں۔\n\nبجلی کے دوران تار والی لینڈ لائن سے پرہیز؛ اندر موبائل اسپیکر پر بہتر۔"
+        },
+        {
+          "heading": "طوفان کے بعد",
+          "body": "گرے ہوئے بجلی کے تار، شکستہ شیشے اور غیر مستحکم ڈھانچے سے محتاط رہیں۔\n\nساحل کے قریب سیلابی پانی میں نہ چلیں—سوراخ یا بہاؤ چھپ سکتا ہے۔\n\nمحفوظ ہو تو حکام یا انشورنس کے لیے نقصان کی تصاویر بنائیں۔\n\nپڑوسیوں کی مدد صرف جب خود محفوظ ہوں۔"
+        }
+      ]
+    }
+  },
+  {
+    "id": "landslide",
+    "icon": "layers",
+    "color": "#a16207",
+    "en": {
+      "title": "Landslide",
+      "summary": "Heavy rain can destabilise slopes. Move away from the slide path and listen for rumbling.",
+      "sections": [
+        {
+          "heading": "Warning signs",
+          "body": "Cracks in walls, floors, or the ground; tilting trees, poles, or fences; new springs or muddy water where it was dry; unusual sounds like rumbling or breaking trees.\n\nIf you notice these on or below a slope, treat it as urgent—do not wait for official warning if danger is obvious."
+        },
+        {
+          "heading": "If a landslide may be starting",
+          "body": "Move sideways out of the path of the slide if you can, not straight down the slope.\n\nShelter behind solid bedrock or a strong structure if escape is not possible.\n\nProtect your head and neck with arms, a bag, or any rigid object.\n\nAvoid river valleys and narrow gorges during intense rain."
+        },
+        {
+          "heading": "After a landslide",
+          "body": "The area can remain unstable for hours or days—stay away from the foot and crest of the slope.\n\nReport blocked roads or damaged utilities to authorities when communication works.\n\nDo not enter damaged buildings until inspected.\n\nHelp others only when it is safe and you have a clear exit."
+        }
+      ]
+    },
+    "ur": {
+      "title": "زمین کھسلاؤ",
+      "summary": "شدید بارش ڈھلوانوں کو کمزور کر سکتی ہے۔ کھسلنے کے راستے سے ہٹ جائیں، گرج سنیں۔",
+      "sections": [
+        {
+          "heading": "انتباہی علامات",
+          "body": "دیواروں، فرش یا زمین میں دراڑیں؛ جھکے ہوئے درخت، کھمبے یا باڑ؛ جہاں خشک تھا وہاں نئے چشمے یا کیچڑ والا پانی؛ غیر معمولی آواز جیسے گرج یا درخت ٹوٹنا۔\n\nاگر ڈھلوان پر یا نیچے یہ دکھیں تو فوری سمجھیں—خطرہ واضح ہو تو حکامی انتظار نہ کریں۔"
+        },
+        {
+          "heading": "اگر زمین کھسلنا شروع ہو",
+          "body": "ممکن ہو تو سیدھے ڈھلوان نیچے نہیں، کنارے کی طرف راستے سے باہر نکلیں۔\n\nاگر فرار ممکن نہ ہو تو ٹھوس چٹان یا مضبوط ڈھانچے کے پیچھے پناہ لیں۔\n\nبازو، بیگ یا کسی سخت چیز سے سر اور گردن محفوظ رکھیں۔\n\nشدید بارش میں دریا کی وادیاں اور تنگ درے سے پرہیز کریں۔"
+        },
+        {
+          "heading": "زمین کھسلنے کے بعد",
+          "body": "علاقہ گھنٹوں یا دنوں تک غیر مستحکم رہ سکتا ہے—ڈھلوان کے سر اور پاؤں سے دور رہیں۔\n\nرابطہ ممکن ہو تو بند سڑکیں یا خراب سہولت حکام کو بتائیں۔\n\nمعائنہ کے بغیر نقصان دیدہ عمارتوں میں نہ جائیں۔\n\nدوسروں کی مدد صرف جب محفوظ ہو اور واضح نکلنے کا راستہ ہو۔"
+        }
+      ]
+    }
+  },
+  {
+    "id": "building-collapse",
+    "icon": "home",
+    "color": "#92400e",
+    "en": {
+      "title": "Building collapse",
+      "summary": "Protect your airway, shelter under strong furniture, and signal rescuers without shifting unstable debris.",
+      "sections": [
+        {
+          "heading": "If the building is failing or collapsing",
+          "body": "Move away from windows, glass partitions, shelves, and heavy objects that can fall. If you cannot exit safely in seconds, DROP, COVER, and HOLD ON under a sturdy desk or table and shield your head and neck with your arms.\n\nDo not use elevators. Use stairs only if the stairwell looks intact, is not full of smoke, and you can move without crossing obvious cracks or leaning walls.\n\nIf dust or smoke fills the air, cover your nose and mouth with a cloth (mask, scarf, or shirt); breathe slowly through it.\n\nListen for groaning metal, cracking concrete, or sudden pops—if the path ahead looks unsafe, shelter in the smallest strong room you can reach (often a bathroom with short walls) with the door closed."
+        },
+        {
+          "heading": "If you are trapped or after a partial collapse",
+          "body": "Conserve energy and stay as still as practical. Tap on pipes or thick walls in a steady pattern (e.g. three taps, pause, repeat) so rescuers can locate you; shout only when you hear voices nearby.\n\nDo not pull on exposed rebar, hanging slabs, or heavy debris alone—shifting load can trigger a secondary collapse.\n\nIf you have a phone, prefer short text messages to voice calls to save battery; turn on battery saver and share your last known location only when asked by trusted responders.\n\nWatch for aftershocks if the collapse followed an earthquake—each time, cover your head again. Help injured people only if you can do it without moving unstable wreckage."
+        },
+        {
+          "heading": "Before and after — reduce risk",
+          "body": "Know at least two stair exits from your home, school, or workplace and a safe meeting point outside away from the building line.\n\nReport widening cracks in columns or load-bearing walls, sagging floors, chronic leaks on concrete, or illegal extra floors to building authorities when it is safe to do so.\n\nAfter floods, explosions, or major quakes, avoid re-entering damaged structures until engineers or civil defence clear them.\n\nKeep a small whistle and flashlight in your go-bag so you can signal if trapped."
+        }
+      ]
+    },
+    "ur": {
+      "title": "عمارت کا گرنا",
+      "summary": "سانس کی نالی محفوظ رکھیں، مضبوط فرنیچر کے نیچے پناہ لیں، اور غیر مستحکم ملبے کو ہلائے بغیر مددگاروں کو سگنل دیں۔",
+      "sections": [
+        {
+          "heading": "اگر عمارت کمزور ہو یا گر رہی ہو",
+          "body": "کھڑکیوں، شیشے کی تقسیموں، الماریوں اور بھاری چیزوں سے دور ہوں جو گر سکتی ہیں۔ اگر چند سیکنڈ میں محفوظ باہر نکلنا ممکن نہ ہو تو مضبوط میز کے نیچے نیچے بیٹھیں، ڈھانپیں، پکڑیں اور بازوؤں سے سر اور گردن محفوظ رکھیں۔\n\nلفٹ استعمال نہ کریں۔ سیڑھی صرف تب جب سیڑھی کا راستہ درست لگے، دھواں نہ بھرا ہو، اور واضح درز یا جھکی دیواروں کے بغیر گزر ممکن ہو۔\n\nاگر دھواں یا گرد بھری ہو تو ناک اور منہ کپڑے (ماسک، دوپٹہ یا شرٹ) سے ڈھانپیں؛ اس کے ذریعے آہستہ سانس لیں۔\n\nدھات کا چرچرانا، کنکریٹ کا کڑکنا یا اچانک آوازیں سنیں—اگر آگے کا راستہ خطرناک لگے تو چھوٹی مضبوط کمرے (اکثر چھوٹی دیواروں والا غسل خانہ) میں در بند کر کے پناہ لیں۔"
+        },
+        {
+          "heading": "اگر پھنس جائیں یا جزوی گرنے کے بعد",
+          "body": "توانائی بچائیں اور جتنا ممکن ہو کم حرکت کریں۔ پائپوں یا موٹی دیواروں پر مستقل انداز میں تھپتھپائیں (مثلاً تین دفعہ، وقفہ، دہرائیں) تاکہ بچاؤ والوں کو پتہ چلے؛ صرف جب قریب آواز سنائی دے تو چلائیں۔\n\nباہر نکلا ہوا سریا، لٹکی ہوئی سلیب یا بھاری ملبے اکیلے نہ کھینچیں—بوجھ ہلنے سے دوبارہ گراؤ ہو سکتا ہے۔\n\nفون ہو تو وائس کے بجائے مختصر ٹیکسٹ سے بیٹری بچائیں؛ بیٹری سیور آن رکھیں اور قابل اعتماد امداد سے پوچھے بغیر لوکیشن نہ بھیجیں۔\n\nاگر زلزلے کے بعد گراؤ ہوا ہے تو بعد کے جھٹکوں کی توقع رکھیں—ہر بار سر دوبارہ ڈھانپیں۔ غیر مستحکم ملبے کو نہ ہلاتے ہوئے ہی زخمیوں کی مدد کریں۔"
+        },
+        {
+          "heading": "پہلے اور بعد میں — خطرہ کم کریں",
+          "body": "گھر، سکول یا کام سے کم از کم دو سیڑھیوں کے نکلنے کے راستے اور عمارت کی لائن سے دور محفوظ ملاقاتی مقام یاد رکھیں۔\n\nستون یا بوجھ برداشت دیواروں میں پھیلتی دراڑیں، جھکے ہوئے فرش، مسلسل رساؤ، یا غیر قانونی اضافی منزلیں جب محفوظ ہو تو بلڈنگ حکام کو اطلاع دیں۔\n\nسیلاب، دھماکے یا بڑے زلزلے کے بعد نقصان دیدہ عمارتوں میں انجینئر یا سول ڈیفنس کی اجازت کے بغیر دوبارہ نہ جائیں۔\n\nگو بیگ میں چھوٹی سیٹی اور ٹارچ رکھیں تاکہ پھنسنے پر سگنل دے سکیں۔"
+        }
+      ]
+    }
   }
 ]

@@ -1,23 +1,36 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useCallback } from 'react';
 import { StyleSheet, Text } from 'react-native';
 
 import { ScreenLayout, SosButton } from '../components';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useTranslatedHeader } from '../hooks/useTranslatedHeader';
 import { useSosEmergency } from '../hooks/useSosEmergency';
+import { dispatchResetToHome } from '../navigation/resetToHome';
 import type { RootStackParamList } from '../navigation/types';
 import { colors, spacing } from '../utils/constants';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SOS'>;
 
 export function SOSScreen({ navigation }: Props) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { sosLoading, triggerSos } = useSosEmergency();
+  const heroDirection = language === 'ur' ? 'rtl' : 'ltr';
 
-  useTranslatedHeader(navigation, 'nav.sos');
+  const onBack = useCallback(() => {
+    dispatchResetToHome(navigation.dispatch);
+  }, [navigation]);
 
   return (
-    <ScreenLayout title={t('nav.sos')} subtitle={t('sos.screenSubtitle')}>
+    <ScreenLayout
+      title={t('nav.sos')}
+      subtitle={t('sos.screenSubtitle')}
+      showBack={{
+        label: t('guides.backToHome'),
+        onPress: onBack,
+        accessibilityLabel: t('guides.backToHome'),
+      }}
+      heroDirection={heroDirection}
+    >
       <SosButton
         onPress={triggerSos}
         loading={sosLoading}

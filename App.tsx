@@ -1,4 +1,3 @@
-import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -18,9 +17,7 @@ export default function App() {
           <ConnectivityBanner />
           <NgoReportsSyncBridge />
           <View style={styles.nav}>
-            <NavigationContainer>
-              <RootNavigator />
-            </NavigationContainer>
+            <RootNavigator />
           </View>
         </View>
         </AuthProvider>

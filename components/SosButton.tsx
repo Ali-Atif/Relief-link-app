@@ -58,7 +58,7 @@ export function SosButton({
 const styles = StyleSheet.create({
   wrap: {
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.sm,
   },
   outerRing: {
     width: '100%',
