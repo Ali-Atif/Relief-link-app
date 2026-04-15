@@ -26,6 +26,7 @@ export type SosAlert = {
   userId: string;
   userName: string;
   userEmail: string | null;
+  userPhone?: string;
   ngoId?: string;
   ngoName?: string;
   latitude: number;
@@ -49,6 +50,7 @@ function mapAlert(snap: QueryDocumentSnapshot<DocumentData>): SosAlert {
     userId: String(data.userId ?? ''),
     userName: String(data.userName ?? 'User'),
     userEmail: (data.userEmail as string | null | undefined) ?? null,
+    userPhone: (data.userPhone as string | undefined) ?? undefined,
     ngoId: data.ngoId as string | undefined,
     ngoName: data.ngoName as string | undefined,
     latitude: Number(data.latitude ?? 0),
@@ -63,6 +65,7 @@ export async function createSosAlert(input: {
   userId: string;
   userName: string;
   userEmail: string | null;
+  userPhone: string;
   latitude: number;
   longitude: number;
   mapsUrl: string;
@@ -71,12 +74,17 @@ export async function createSosAlert(input: {
     userId: input.userId,
     userName: input.userName,
     userEmail: input.userEmail,
+    userPhone: input.userPhone.trim() || null,
     latitude: input.latitude,
     longitude: input.longitude,
     mapsUrl: input.mapsUrl,
     status: 'open',
     createdAt: serverTimestamp(),
   });
+
+  const phoneLine = input.userPhone.trim() ? `Phone: ${input.userPhone.trim()}` : 'Phone: —';
+  const emailLine = input.userEmail?.trim() ? `Email: ${input.userEmail.trim()}` : 'Email: —';
+  const notifyBody = `${input.userName} · ${emailLine} · ${phoneLine}`;
 
   const ngos = await listNgoProfiles();
   await Promise.all(
@@ -85,7 +93,7 @@ export async function createSosAlert(input: {
         userId: ngo.uid,
         type: 'sos',
         title: 'New SOS application',
-        body: `${input.userName} requested emergency support.`,
+        body: notifyBody,
       }),
     ),
   );

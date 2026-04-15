@@ -9,6 +9,7 @@ import * as SMS from 'expo-sms';
 import { auth } from './firebase';
 import { getEmergencyContacts } from './emergencyContactsStorage';
 import { createSosAlert } from './sosAlertsService';
+import { getUserProfile } from './userProfiles';
 
 export type SosFailureReason =
   | 'no_contacts'
@@ -56,11 +57,24 @@ export async function runSosEmergency(): Promise<SosResult> {
 
   const mapsUrl = buildGoogleMapsUrl(coords.latitude, coords.longitude);
   const user = auth.currentUser;
+  let profile: Awaited<ReturnType<typeof getUserProfile>> = null;
+  if (user) {
+    try {
+      profile = await getUserProfile(user.uid);
+    } catch {
+      profile = null;
+    }
+  }
+  const userName = profile?.displayName?.trim() || user?.displayName || user?.email || 'User';
+  const userEmail = profile?.email ?? user?.email ?? null;
+  const userPhone = profile?.phone?.trim() ?? '';
+
   const sosEvent = user
     ? await createSosAlert({
         userId: user.uid,
-        userName: user.displayName ?? user.email ?? 'User',
-        userEmail: user.email,
+        userName,
+        userEmail,
+        userPhone,
         latitude: coords.latitude,
         longitude: coords.longitude,
         mapsUrl,
@@ -71,7 +85,14 @@ export async function runSosEmergency(): Promise<SosResult> {
     return { ok: false, reason: 'no_contacts', mapsUrl, notifiedNgoCount: sosEvent.notifiedNgoCount };
   }
 
-  const message = `I am in danger. My location: ${mapsUrl}`;
+  const whoLines = [
+    `Name: ${userName}`,
+    userEmail ? `Email: ${userEmail}` : null,
+    userPhone ? `Phone: ${userPhone}` : null,
+  ]
+    .filter(Boolean)
+    .join('\n');
+  const message = `I am in danger.\n${whoLines}\nLocation: ${mapsUrl}`;
 
   const smsOk = await SMS.isAvailableAsync();
   if (!smsOk) {

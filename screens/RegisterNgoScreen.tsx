@@ -55,7 +55,12 @@ export function RegisterNgoScreen({ navigation }: Props) {
       address,
     });
     if (ok) {
-      navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'Login' }] }));
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'Login', params: { prefilledEmail: email.trim() } }],
+        }),
+      );
     }
   };
 

@@ -1,5 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useRoute } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -14,8 +15,16 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 export function LoginScreen({ navigation }: Props) {
   const { login, error, clearError, busy } = useAuth();
   const { t, language, toggleLanguage } = useLanguage();
+  const route = useRoute<Props['route']>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  useEffect(() => {
+    const prefilled = route.params?.prefilledEmail?.trim();
+    if (prefilled) {
+      setEmail(prefilled);
+    }
+  }, [route.params?.prefilledEmail]);
 
   useEffect(() => {
     const unsub = navigation.addListener('focus', () => clearError());

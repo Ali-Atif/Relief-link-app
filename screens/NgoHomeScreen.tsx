@@ -77,7 +77,8 @@ export function NgoHomeScreen({ navigation }: Props) {
         {activeAlerts.map((alert) => (
           <View key={alert.id} style={styles.alertCard}>
             <Text style={styles.alertName}>{alert.userName}</Text>
-            <Text style={styles.alertDetail}>{alert.userEmail ?? 'No email available'}</Text>
+            <Text style={styles.alertDetail}>{`Email: ${alert.userEmail ?? '—'}`}</Text>
+            <Text style={styles.alertDetail}>{`Phone: ${alert.userPhone?.trim() ? alert.userPhone : '—'}`}</Text>
             <Text style={styles.alertDetail}>{`Location: ${alert.mapsUrl}`}</Text>
             <Text style={styles.alertDetail}>{`Status: ${alert.status}`}</Text>
             <PrimaryButton

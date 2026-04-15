@@ -1,5 +1,6 @@
+import { useHeaderHeight } from '@react-navigation/elements';
 import type { ReactNode } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors, radii, spacing } from '../utils/constants';
@@ -13,6 +14,8 @@ type Props = {
 };
 
 export function ScreenLayout({ title, subtitle, children, scrollable = true }: Props) {
+  const headerHeight = useHeaderHeight();
+
   const header =
     title != null && title.length > 0 ? (
       <View style={styles.titleBlock}>
@@ -26,27 +29,47 @@ export function ScreenLayout({ title, subtitle, children, scrollable = true }: P
       <Text style={styles.subtitleOnly}>{subtitle}</Text>
     ) : null;
 
+  const keyboardVerticalOffset = Platform.OS === 'ios' ? headerHeight : 0;
+  /** Android relies on `softwareKeyboardLayoutMode: "resize"` in app.json; avoid double-adjust with KAV. */
+  const keyboardBehavior = Platform.OS === 'ios' ? 'padding' : undefined;
+
+  const avoiding = (inner: ReactNode) => (
+    <KeyboardAvoidingView
+      style={styles.keyboardFlex}
+      behavior={keyboardBehavior}
+      keyboardVerticalOffset={keyboardVerticalOffset}
+    >
+      {inner}
+    </KeyboardAvoidingView>
+  );
+
   if (!scrollable) {
     return (
       <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-        <View style={styles.fixedOuter}>
-          {header}
-          <View style={[styles.body, styles.bodyFlex]}>{children}</View>
-        </View>
+        {avoiding(
+          <View style={styles.fixedOuter}>
+            {header}
+            <View style={[styles.body, styles.bodyFlex]}>{children}</View>
+          </View>,
+        )}
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        {header}
-        <View style={styles.body}>{children}</View>
-      </ScrollView>
+      {avoiding(
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={false}
+        >
+          {header}
+          <View style={styles.body}>{children}</View>
+        </ScrollView>,
+      )}
     </SafeAreaView>
   );
 }
@@ -56,7 +79,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  keyboardFlex: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
   scroll: {
+    flexGrow: 1,
     paddingHorizontal: spacing.md + 2,
     paddingBottom: spacing.xl,
   },

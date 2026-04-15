@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import type { AuthStackParamList } from '../navigation/types';
 import { colors, spacing } from '../utils/constants';
+import { validatePhoneNumber } from '../utils/phoneValidation';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'RegisterUser'>;
 
@@ -16,6 +17,7 @@ export function RegisterUserScreen({ navigation }: Props) {
   const { t } = useLanguage();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
@@ -34,6 +36,11 @@ export function RegisterUserScreen({ navigation }: Props) {
       setLocalError(t('auth.nameRequired'));
       return;
     }
+    const phoneCheck = validatePhoneNumber(phone);
+    if (!phoneCheck.valid) {
+      setLocalError(t(`phone.${phoneCheck.errorKey}`));
+      return;
+    }
     if (password !== confirm) {
       setLocalError(t('auth.passwordMismatch'));
       return;
@@ -47,9 +54,15 @@ export function RegisterUserScreen({ navigation }: Props) {
       password,
       role: 'user',
       displayName: name,
+      phone: phoneCheck.value,
     });
     if (ok) {
-      navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'Login' }] }));
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'Login', params: { prefilledEmail: email.trim() } }],
+        }),
+      );
     }
   };
 
@@ -79,6 +92,18 @@ export function RegisterUserScreen({ navigation }: Props) {
           autoCapitalize="none"
           keyboardType="email-address"
           autoComplete="email"
+          editable={!busy}
+        />
+      </View>
+      <View style={styles.field}>
+        <Text style={styles.label}>{t('auth.phone')}</Text>
+        <TextInput
+          style={styles.input}
+          value={phone}
+          onChangeText={setPhone}
+          placeholder={t('auth.phUserPhone')}
+          keyboardType="phone-pad"
+          autoComplete="tel"
           editable={!busy}
         />
       </View>

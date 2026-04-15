@@ -1,6 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useEffect, useState } from 'react';
-import { FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { FlatList, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { PrimaryButton, ScreenLayout } from '../components';
 import { useAuth } from '../contexts/AuthContext';
@@ -14,6 +14,13 @@ export function ChatScreen({ route }: Props) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
+  const listRef = useRef<FlatList<ChatMessage>>(null);
+
+  const scrollToEnd = () => {
+    requestAnimationFrame(() => {
+      listRef.current?.scrollToEnd({ animated: true });
+    });
+  };
 
   useEffect(() => subscribeChatMessages(route.params.chatId, setMessages), [route.params.chatId]);
 
@@ -40,9 +47,14 @@ export function ChatScreen({ route }: Props) {
       <View style={styles.chatColumn}>
         <View style={styles.listWrap}>
           <FlatList
+            ref={listRef}
             style={styles.list}
             data={messages}
             keyExtractor={(item) => item.id}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+            onContentSizeChange={scrollToEnd}
+            onLayout={scrollToEnd}
             renderItem={({ item }) => {
               const isMine = user?.uid === item.senderId;
               return (
@@ -62,6 +74,12 @@ export function ChatScreen({ route }: Props) {
             onChangeText={setInput}
             placeholder="Type your message"
             placeholderTextColor={colors.textMuted}
+            onFocus={() => {
+              scrollToEnd();
+              setTimeout(scrollToEnd, 250);
+            }}
+            returnKeyType="default"
+            blurOnSubmit={false}
           />
           <PrimaryButton label="Send" icon="send-outline" onPress={() => void send()} />
         </View>

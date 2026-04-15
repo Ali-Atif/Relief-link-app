@@ -31,7 +31,7 @@ export function RegisterScreen({ navigation }: Props) {
         label={t('auth.backToSignIn')}
         variant="outline"
         icon="arrow-back-outline"
-        onPress={() => navigation.navigate('Login')}
+        onPress={() => navigation.navigate('Login', {})}
       />
     </ScreenLayout>
   );

@@ -195,6 +195,10 @@ export function HomeScreen() {
         {myAlerts.slice(0, 3).map((alert) => (
           <View key={alert.id} style={styles.notificationRow}>
             <Text style={[styles.notificationTitle, { textAlign }]}>{`Status: ${alert.status}`}</Text>
+            <Text style={[styles.notificationText, { textAlign }]}>{`${alert.userName} · ${alert.userEmail ?? '—'}`}</Text>
+            {alert.userPhone ? (
+              <Text style={[styles.notificationText, { textAlign }]}>{alert.userPhone}</Text>
+            ) : null}
             <Text style={[styles.notificationText, { textAlign }]}>{alert.mapsUrl}</Text>
             {alert.status === 'in_chat' ? (
               <Pressable
