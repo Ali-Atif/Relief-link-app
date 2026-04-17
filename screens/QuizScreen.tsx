@@ -7,20 +7,29 @@ import { useCallback } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { GuideBackChip } from '../components/GuideBackChip';
 import { PrimaryButton } from '../components';
+import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useQuizSession } from '../hooks/useQuizSession';
-import { useTranslatedHeader } from '../hooks/useTranslatedHeader';
+import { dispatchResetToHome } from '../navigation/resetToHome';
 import type { RootStackParamList } from '../navigation/types';
 import { getQuizTopicTranslationKey } from '../services/quizTopics';
 import { percentCorrect } from '../services/quizSession';
 import { colors, spacing } from '../utils/constants';
+import { guideDetailScrollContent } from '../utils/guideDetailChrome';
+import { blockDirection } from '../utils/layoutRtl';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Quiz'>;
 
 export function QuizScreen({ navigation }: Props) {
+  const { user } = useAuth();
   const { language, t } = useLanguage();
-  useTranslatedHeader(navigation, 'nav.quiz');
+  const direction = language === 'ur' ? 'rtl' : 'ltr';
+
+  const onBack = useCallback(() => {
+    dispatchResetToHome(navigation.dispatch, user?.role === 'ngo');
+  }, [navigation, user?.role]);
 
   const {
     phase,
@@ -41,12 +50,20 @@ export function QuizScreen({ navigation }: Props) {
   );
 
   return (
-    <SafeAreaView style={styles.safe} edges={['left', 'right', 'bottom']}>
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={guideDetailScrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        <View style={blockDirection(direction)}>
+          <GuideBackChip
+            label={t('guides.backToHome')}
+            onPress={onBack}
+            accessibilityLabel={t('guides.backToHome')}
+          />
+        </View>
+
         {phase === 'intro' ? (
           <View style={styles.block}>
             <Text style={styles.title}>{t('quiz.introTitle')}</Text>
@@ -110,12 +127,6 @@ export function QuizScreen({ navigation }: Props) {
               })}
             </Text>
             <PrimaryButton label={t('quiz.retry')} icon="refresh-outline" onPress={retry} />
-            <PrimaryButton
-              label={t('quiz.backHome')}
-              variant="outline"
-              icon="home-outline"
-              onPress={() => navigation.goBack()}
-            />
           </View>
         ) : null}
       </ScrollView>
@@ -127,11 +138,6 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  scroll: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.lg * 2,
   },
   block: {
     gap: spacing.md,

@@ -3,20 +3,27 @@
  */
 
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useCallback } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { PrimaryButton, ScreenLayout } from '../components';
+import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useNgoReportScreen } from '../hooks/useNgoReportScreen';
-import { useTranslatedHeader } from '../hooks/useTranslatedHeader';
+import { dispatchResetToHome } from '../navigation/resetToHome';
 import type { RootStackParamList } from '../navigation/types';
 import { colors, spacing } from '../utils/constants';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Report'>;
 
 export function ReportScreen({ navigation }: Props) {
-  const { t } = useLanguage();
-  useTranslatedHeader(navigation, 'nav.report');
+  const { user } = useAuth();
+  const { t, language } = useLanguage();
+  const heroDirection = language === 'ur' ? 'rtl' : 'ltr';
+
+  const onBack = useCallback(() => {
+    dispatchResetToHome(navigation.dispatch, user?.role === 'ngo');
+  }, [navigation, user?.role]);
 
   const {
     title,
@@ -33,7 +40,16 @@ export function ReportScreen({ navigation }: Props) {
   } = useNgoReportScreen();
 
   return (
-    <ScreenLayout title={t('report.title')} subtitle={t('report.subtitle')}>
+    <ScreenLayout
+      title={t('report.title')}
+      subtitle={t('report.subtitle')}
+      showBack={{
+        label: t('guides.backToHome'),
+        onPress: onBack,
+        accessibilityLabel: t('guides.backToHome'),
+      }}
+      heroDirection={heroDirection}
+    >
       {pendingCount > 0 ? (
         <View style={styles.banner}>
           <Text style={styles.bannerText}>{t('report.pendingLine', { count: pendingCount })}</Text>

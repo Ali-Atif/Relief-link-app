@@ -9,6 +9,7 @@ export type CachedUser = {
   displayName?: string | null;
   role?: 'user' | 'ngo';
   ngoName?: string;
+  registrationNumber?: string;
   phone?: string;
   address?: string;
 };

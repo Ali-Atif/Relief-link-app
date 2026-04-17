@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 
 import { colors, spacing } from '../utils/constants';
 
@@ -36,13 +36,28 @@ export function PieChart({ data, size = 180 }: Props) {
 
   let currentAngle = 0;
   const radius = size / 2;
+  const innerRadius = radius - 4;
 
   return (
     <View style={styles.root}>
-      <Svg width={size} height={size}>
+      <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         {usable.map((slice) => {
           const sweep = (slice.value / safeTotal) * 360;
-          const path = describeArc(radius, radius, radius - 4, currentAngle, currentAngle + sweep);
+          // SVG arc commands don't reliably render a full 360° sweep (start==end => invisible).
+          if (sweep >= 359.999) {
+            currentAngle += sweep;
+            return (
+              <Circle
+                key={slice.label}
+                cx={radius}
+                cy={radius}
+                r={innerRadius}
+                fill={slice.color}
+              />
+            );
+          }
+
+          const path = describeArc(radius, radius, innerRadius, currentAngle, currentAngle + sweep);
           currentAngle += sweep;
           return <Path key={slice.label} d={path} fill={slice.color} />;
         })}

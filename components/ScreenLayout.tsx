@@ -4,21 +4,43 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors, radii, spacing } from '../utils/constants';
+import { GuideBackChip } from './GuideBackChip';
+
+export type ScreenLayoutBack = {
+  label: string;
+  onPress: () => void;
+  accessibilityLabel?: string;
+};
 
 type Props = {
   title?: string;
   subtitle?: string;
+  showBack?: ScreenLayoutBack;
+  heroDirection?: 'ltr' | 'rtl';
   children: ReactNode;
   /** When false, content is not inside ScrollView (required for FlatList / other VirtualizedLists). */
   scrollable?: boolean;
+  /** Vertical gap between child blocks inside the body. */
+  bodyGap?: number;
+  /** Override default scroll bottom padding (scrollable layouts only). */
+  contentPaddingBottom?: number;
 };
 
-export function ScreenLayout({ title, subtitle, children, scrollable = true }: Props) {
+export function ScreenLayout({
+  title,
+  subtitle,
+  showBack,
+  heroDirection = 'ltr',
+  children,
+  scrollable = true,
+  bodyGap,
+  contentPaddingBottom,
+}: Props) {
   const headerHeight = useHeaderHeight();
 
   const header =
     title != null && title.length > 0 ? (
-      <View style={styles.titleBlock}>
+      <View style={[styles.titleBlock, heroDirection === 'rtl' ? styles.titleBlockRtl : null]}>
         <View style={styles.titleAccent} />
         <View style={styles.titleTextWrap}>
           <Text style={styles.title}>{title}</Text>
@@ -48,8 +70,17 @@ export function ScreenLayout({ title, subtitle, children, scrollable = true }: P
       <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
         {avoiding(
           <View style={styles.fixedOuter}>
+            {showBack ? (
+              <GuideBackChip
+                label={showBack.label}
+                onPress={showBack.onPress}
+                accessibilityLabel={showBack.accessibilityLabel}
+              />
+            ) : null}
             {header}
-            <View style={[styles.body, styles.bodyFlex]}>{children}</View>
+            <View style={[styles.body, styles.bodyFlex, bodyGap != null ? { gap: bodyGap } : null]}>
+              {children}
+            </View>
           </View>,
         )}
       </SafeAreaView>
@@ -61,13 +92,23 @@ export function ScreenLayout({ title, subtitle, children, scrollable = true }: P
       {avoiding(
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[
+            styles.scroll,
+            contentPaddingBottom != null ? { paddingBottom: contentPaddingBottom } : null,
+          ]}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
         >
+          {showBack ? (
+            <GuideBackChip
+              label={showBack.label}
+              onPress={showBack.onPress}
+              accessibilityLabel={showBack.accessibilityLabel}
+            />
+          ) : null}
           {header}
-          <View style={styles.body}>{children}</View>
+          <View style={[styles.body, bodyGap != null ? { gap: bodyGap } : null]}>{children}</View>
         </ScrollView>,
       )}
     </SafeAreaView>
@@ -104,6 +145,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     gap: spacing.md,
   },
+  titleBlockRtl: {
+    flexDirection: 'row-reverse',
+  },
   titleAccent: {
     width: 5,
     borderRadius: radii.sm,
@@ -134,7 +178,5 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     fontWeight: '500',
   },
-  body: {
-    gap: spacing.md + 4,
-  },
+  body: {},
 });

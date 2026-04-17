@@ -7,8 +7,10 @@ import { colors, layout, radii, spacing } from '../utils/constants';
 type Props = {
   label: string;
   onPress: () => void;
-  variant?: 'filled' | 'outline';
+  variant?: 'filled' | 'outline' | 'tertiary';
   disabled?: boolean;
+  /** Stretch to parent width (e.g. equal columns in a row). */
+  fullWidth?: boolean;
   children?: ReactNode;
   /** Ionicons name (e.g. "log-out-outline") */
   icon?: keyof typeof Ionicons.glyphMap;
@@ -20,11 +22,13 @@ export const PrimaryButton = memo(function PrimaryButton({
   onPress,
   variant = 'filled',
   disabled = false,
+  fullWidth = false,
   icon,
   iconPosition = 'left',
 }: Props) {
   const isOutline = variant === 'outline';
-  const iconColor = isOutline ? colors.primaryDark : colors.onEmergency;
+  const isTertiary = variant === 'tertiary';
+  const iconColor = isTertiary || isOutline ? colors.primaryDark : colors.onEmergency;
   const iconEl = icon ? (
     <Ionicons name={icon} size={22} color={disabled ? colors.textMuted : iconColor} />
   ) : null;
@@ -35,9 +39,9 @@ export const PrimaryButton = memo(function PrimaryButton({
       disabled={disabled}
       style={({ pressed }) => [
         styles.base,
-        isOutline ? styles.outline : styles.filled,
+        isTertiary ? styles.tertiary : isOutline ? styles.outline : styles.filled,
         disabled && styles.disabled,
-        pressed && !disabled && styles.pressed,
+        pressed && !disabled && (isTertiary ? styles.pressedTertiary : styles.pressed),
       ]}
     >
       <View style={styles.inner}>
@@ -45,7 +49,7 @@ export const PrimaryButton = memo(function PrimaryButton({
         <Text
           style={[
             styles.label,
-            isOutline && styles.labelOutline,
+            (isOutline || isTertiary) && styles.labelOutline,
             disabled && styles.labelDisabled,
             icon ? styles.labelWithIcon : null,
           ]}
@@ -66,11 +70,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  fullWidth: {
+    alignSelf: 'stretch',
+    width: '100%',
+  },
   inner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    // gap: spacing.sm,
+    gap: spacing.sm,
   },
   filled: {
     backgroundColor: colors.primary,
@@ -85,8 +93,18 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.primary,
   },
+  tertiary: {
+    backgroundColor: colors.surfaceMuted,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
   pressed: {
-    opacity: 0.9,
+    opacity: 0.92,
+    transform: [{ scale: 0.99 }],
+  },
+  pressedTertiary: {
+    opacity: 1,
+    backgroundColor: '#e2e8f0',
     transform: [{ scale: 0.99 }],
   },
   disabled: {

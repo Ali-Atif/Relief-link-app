@@ -22,5 +22,9 @@ export function useNotifications() {
     await Promise.all(unread.map((item) => markNotificationRead(item.id)));
   };
 
-  return { notifications, unreadCount, markAllRead };
+  const markRead = async (id: string) => {
+    await markNotificationRead(id);
+  };
+
+  return { notifications, unreadCount, markAllRead, markRead };
 }

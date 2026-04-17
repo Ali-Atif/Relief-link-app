@@ -2,10 +2,11 @@ import {
   addDoc,
   collection,
   doc,
+  getDoc,
   limit,
   onSnapshot,
-  orderBy,
   query,
+  runTransaction,
   serverTimestamp,
   updateDoc,
   where,
@@ -15,11 +16,17 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore';
 
+import { getChatThreadId } from './chatThreadIds';
 import { db } from './firebase';
 import { sendNotification } from './notificationsService';
 import { listNgoProfiles } from './userProfiles';
 
-export type SosAlertStatus = 'open' | 'in_chat' | 'resolved';
+export type SosAlertStatus = 'pending' | 'in_progress' | 'resolved';
+export type LegacySosAlertStatus = 'open' | 'in_chat';
+export type AnySosAlertStatus = SosAlertStatus | LegacySosAlertStatus;
+export type SosClaimResult =
+  | { ok: true }
+  | { ok: false; reason: 'already_resolved' | 'claimed_by_other_ngo' };
 
 export type SosAlert = {
   id: string;
@@ -32,7 +39,7 @@ export type SosAlert = {
   latitude: number;
   longitude: number;
   mapsUrl: string;
-  status: SosAlertStatus;
+  status: AnySosAlertStatus;
   createdAtIso?: string;
 };
 
@@ -45,6 +52,7 @@ function tsToIso(ts: Timestamp | null | undefined): string | undefined {
 
 function mapAlert(snap: QueryDocumentSnapshot<DocumentData>): SosAlert {
   const data = snap.data();
+  const createdAtIso = tsToIso(data.createdAt as Timestamp | null | undefined) ?? String(data.createdAtClientIso ?? '');
   return {
     id: snap.id,
     userId: String(data.userId ?? ''),
@@ -56,9 +64,15 @@ function mapAlert(snap: QueryDocumentSnapshot<DocumentData>): SosAlert {
     latitude: Number(data.latitude ?? 0),
     longitude: Number(data.longitude ?? 0),
     mapsUrl: String(data.mapsUrl ?? ''),
-    status: (data.status as SosAlertStatus) ?? 'open',
-    createdAtIso: tsToIso(data.createdAt as Timestamp | null | undefined),
+    status: (data.status as AnySosAlertStatus) ?? 'pending',
+    createdAtIso,
   };
+}
+
+export async function getSosAlertById(alertId: string): Promise<SosAlert | null> {
+  const snap = await getDoc(doc(db, SOS_ALERTS_COLLECTION, alertId));
+  if (!snap.exists()) return null;
+  return mapAlert(snap as QueryDocumentSnapshot<DocumentData>);
 }
 
 export async function createSosAlert(input: {
@@ -78,7 +92,8 @@ export async function createSosAlert(input: {
     latitude: input.latitude,
     longitude: input.longitude,
     mapsUrl: input.mapsUrl,
-    status: 'open',
+    status: 'pending',
+    createdAtClientIso: new Date().toISOString(),
     createdAt: serverTimestamp(),
   });
 
@@ -113,14 +128,116 @@ export async function assignNgoToSosAlert(
   await updateDoc(doc(db, SOS_ALERTS_COLLECTION, alertId), {
     ngoId,
     ngoName,
-    status: 'in_chat',
+    status: 'in_progress',
+  });
+}
+
+export function normalizeToModernStatus(status: AnySosAlertStatus): SosAlertStatus {
+  if (status === 'open') return 'pending';
+  if (status === 'in_chat') return 'in_progress';
+  return status;
+}
+
+export async function markSosAlertInProgress(
+  alertId: string,
+  ngoId: string,
+  ngoName: string,
+): Promise<SosClaimResult> {
+  const result = await runTransaction(db, async (tx) => {
+    const alertRef = doc(db, SOS_ALERTS_COLLECTION, alertId);
+    const snap = await tx.get(alertRef);
+    if (!snap.exists()) return { ok: false, reason: 'already_resolved' } as const;
+
+    const data = snap.data();
+    const status = normalizeToModernStatus((data.status as AnySosAlertStatus) ?? 'pending');
+    const assignedNgoId = String(data.ngoId ?? '');
+    const userId = String(data.userId ?? '');
+
+    if (status === 'resolved') return { ok: false, reason: 'already_resolved' } as const;
+    if (assignedNgoId && assignedNgoId !== ngoId) return { ok: false, reason: 'claimed_by_other_ngo' } as const;
+
+    tx.update(alertRef, {
+      status: 'in_progress',
+      ngoId,
+      ngoName,
+      updatedAt: serverTimestamp(),
+    });
+
+    if (!assignedNgoId || assignedNgoId !== ngoId) {
+      void sendNotification({
+        userId,
+        type: 'chat',
+        title: 'NGO started support',
+        body: `${ngoName} started helping you.`,
+        chatId: getChatThreadId(alertId, ngoId),
+        alertId,
+      });
+    }
+    return { ok: true } as const;
+  });
+
+  if (result.ok) {
+    try {
+      await updateDoc(doc(db, 'chats', getChatThreadId(alertId, ngoId)), {
+        openAccess: false,
+      });
+    } catch {
+      /* dedicated thread may not exist yet */
+    }
+  }
+
+  return result;
+}
+
+export async function markSosAlertResolved(alertId: string, ngoId: string): Promise<SosClaimResult> {
+  return runTransaction(db, async (tx) => {
+    const alertRef = doc(db, SOS_ALERTS_COLLECTION, alertId);
+    const snap = await tx.get(alertRef);
+    if (!snap.exists()) return { ok: false, reason: 'already_resolved' } as const;
+
+    const data = snap.data();
+    const status = normalizeToModernStatus((data.status as AnySosAlertStatus) ?? 'pending');
+    const assignedNgoId = String(data.ngoId ?? '');
+    if (status === 'resolved') return { ok: false, reason: 'already_resolved' } as const;
+    if (assignedNgoId && assignedNgoId !== ngoId) return { ok: false, reason: 'claimed_by_other_ngo' } as const;
+
+    tx.update(alertRef, {
+      status: 'resolved',
+      updatedAt: serverTimestamp(),
+    });
+    return { ok: true } as const;
+  });
+}
+
+export async function rerequestSosAlert(alertId: string, userId: string): Promise<void> {
+  await runTransaction(db, async (tx) => {
+    const alertRef = doc(db, SOS_ALERTS_COLLECTION, alertId);
+    const snap = await tx.get(alertRef);
+    if (!snap.exists()) return;
+
+    const data = snap.data();
+    if (String(data.userId ?? '') !== userId) return;
+
+    const status = normalizeToModernStatus((data.status as AnySosAlertStatus) ?? 'pending');
+    if (status !== 'in_progress') return;
+
+    tx.update(alertRef, {
+      status: 'pending',
+      ngoId: null,
+      ngoName: null,
+      updatedAt: serverTimestamp(),
+    });
   });
 }
 
 export function subscribeLatestSosAlerts(onChange: (items: SosAlert[]) => void): Unsubscribe {
-  const q = query(collection(db, SOS_ALERTS_COLLECTION), orderBy('createdAt', 'desc'), limit(50));
+  const q = query(collection(db, SOS_ALERTS_COLLECTION), limit(80));
   return onSnapshot(q, (snap) => {
-    onChange(snap.docs.map(mapAlert));
+    const rows = snap.docs
+      .map(mapAlert)
+      .sort((a, b) => (b.createdAtIso ?? '').localeCompare(a.createdAtIso ?? ''))
+      .slice(0, 50);
+    onChange(rows);
   });
 }
 

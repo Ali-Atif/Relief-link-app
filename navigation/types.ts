@@ -5,6 +5,8 @@ export type RootStackParamList = {
   RegisterNgo: undefined;
   Home: undefined;
   NgoHome: undefined;
+  Profile: undefined;
+  Notifications: undefined;
   SOS: undefined;
   Contacts: undefined;
   AddContact: undefined;

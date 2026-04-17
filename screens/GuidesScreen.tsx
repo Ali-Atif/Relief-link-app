@@ -1,52 +1,88 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useMemo } from 'react';
+import { FlatList, StyleSheet, Text, View, type ListRenderItem } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { GuideBackChip } from '../components/GuideBackChip';
+import QuickTile, { QUICK_TILE_LIFT_PX } from '../components/newUI/QuickTile';
+import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useTranslatedHeader } from '../hooks/useTranslatedHeader';
+import { dispatchResetToHome } from '../navigation/resetToHome';
 import type { RootStackParamList } from '../navigation/types';
-import { getAllGuides } from '../services/guides';
+import { getAllGuidesForLanguage, type LocalizedSurvivalGuide } from '../services/guides';
+import { blockDirection } from '../utils/layoutRtl';
 import { colors, spacing } from '../utils/constants';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Guides'>;
 
-const guides = getAllGuides();
+/** Small extra bottom so last row shadow / hover is not clipped. */
+const SHADOW_PAD = 4;
 
 export function GuidesScreen({ navigation }: Props) {
-  const { t } = useLanguage();
-  useTranslatedHeader(navigation, 'nav.guides');
+  const { user } = useAuth();
+  const { language, t } = useLanguage();
+
+  const guides = useMemo(() => getAllGuidesForLanguage(language), [language]);
+  const textAlign = language === 'ur' ? 'right' : 'left';
+  const writingDirection = language === 'ur' ? 'rtl' : 'ltr';
+  const direction = language === 'ur' ? 'rtl' : 'ltr';
+
+  const backToHome = useCallback(() => {
+    dispatchResetToHome(navigation.dispatch, user?.role === 'ngo');
+  }, [navigation, user?.role]);
+
+  const listHeader = useMemo(
+    () => (
+      <View style={styles.listHeader}>
+        <View style={[styles.hero, blockDirection(direction)]}>
+          <GuideBackChip
+            label={t('guides.backToHome')}
+            onPress={backToHome}
+            accessibilityLabel={t('guides.backToHome')}
+          />
+          <Text style={[styles.title, { textAlign, writingDirection }]}>{t('guides.title')}</Text>
+          <Text
+            style={[styles.sectionH3, { textAlign, writingDirection }]}
+            accessibilityRole="header"
+          >
+            {t('guides.sectionH3')}
+          </Text>
+        </View>
+        {/* Space for QuickTile translateY(-LIFT) so the first row does not clip under the header / list top */}
+        <View style={{ height: QUICK_TILE_LIFT_PX + 4 }} />
+      </View>
+    ),
+    [backToHome, direction, t, textAlign, writingDirection],
+  );
+
+  const renderItem = useCallback<ListRenderItem<LocalizedSurvivalGuide>>(
+    ({ item }) => (
+      <View style={styles.tileCell}>
+        <QuickTile
+          layout="compact"
+          title={item.title}
+          icon={item.icon}
+          color={item.color}
+          onPress={() => navigation.navigate('GuideDetail', { guideId: item.id })}
+        />
+      </View>
+    ),
+    [navigation],
+  );
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('guides.title')}</Text>
-        <Text style={styles.subtitle}>{t('guides.subtitle')}</Text>
-      </View>
-
       <FlatList
-        style={styles.list}
         data={guides}
         keyExtractor={(item) => item.id}
-        ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
+        numColumns={2}
+        ListHeaderComponent={listHeader}
+        renderItem={renderItem}
+        columnWrapperStyle={styles.columnRow}
         contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => (
-          <Pressable
-            style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
-            onPress={() =>
-              navigation.navigate('GuideDetail', { guideId: item.id, title: item.title })
-            }
-            accessibilityRole="button"
-            accessibilityLabel={t('guides.openHint')}
-          >
-            <View style={styles.rowText}>
-              <Text style={styles.rowTitle}>{item.title}</Text>
-              <Text style={styles.rowSummary} numberOfLines={2}>
-                {item.summary}
-              </Text>
-            </View>
-            <Text style={styles.chevron}>›</Text>
-          </Pressable>
-        )}
+        style={styles.list}
+        showsVerticalScrollIndicator
+        removeClippedSubviews={false}
       />
     </SafeAreaView>
   );
@@ -57,61 +93,45 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
-    paddingHorizontal: spacing.md,
+  list: {
+    flex: 1,
+    overflow: 'visible',
+  },
+  listHeader: {
+    paddingTop: spacing.sm,
+  },
+  hero: {
     paddingBottom: spacing.md,
   },
   title: {
     fontSize: 24,
+    fontWeight: '800',
+    color: colors.text,
+    marginBottom: spacing.xs,
+    alignSelf: 'stretch',
+  },
+  sectionH3: {
+    fontSize: 17,
     fontWeight: '700',
     color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: colors.textMuted,
-    lineHeight: 22,
-  },
-  list: {
-    flex: 1,
+    lineHeight: 24,
+    marginBottom: spacing.md,
+    alignSelf: 'stretch',
   },
   listContent: {
     paddingHorizontal: spacing.md,
-    paddingBottom: spacing.lg,
+    paddingBottom: spacing.lg + spacing.md + SHADOW_PAD,
+    flexGrow: 1,
   },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  columnRow: {
     justifyContent: 'space-between',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: colors.text,
-    minHeight: 72,
+    marginBottom: spacing.sm,
+    gap: spacing.sm,
+    overflow: 'visible',
   },
-  rowPressed: {
-    opacity: 0.92,
-  },
-  rowText: {
+  tileCell: {
     flex: 1,
-    marginRight: spacing.sm,
-  },
-  rowTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0f172a',
-    marginBottom: 4,
-  },
-  rowSummary: {
-    fontSize: 15,
-    color: colors.textMuted,
-    lineHeight: 21,
-  },
-  chevron: {
-    fontSize: 28,
-    fontWeight: '600',
-    color: colors.primary,
+    paddingHorizontal: spacing.xs / 2,
+    overflow: 'visible',
   },
 });

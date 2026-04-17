@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, type TextStyle } from 'react-native';
 
 import { colors, layout, radii, spacing } from '../utils/constants';
 
@@ -9,8 +9,11 @@ type Props = {
   disabled?: boolean;
   loading?: boolean;
   subtitle?: ReactNode;
+  /** Main label inside the button (e.g. localized "SOS"). */
+  mainLabel?: string;
   emergencySubLabel?: string;
   accessibilityLabel?: string;
+  subtitleStyle?: TextStyle;
 };
 
 /** Extra-large high-contrast SOS — primary emergency action. */
@@ -19,8 +22,10 @@ export function SosButton({
   disabled = false,
   loading = false,
   subtitle,
+  mainLabel = 'SOS',
   emergencySubLabel = 'Emergency alert',
   accessibilityLabel = 'Emergency SOS. Sends your location by SMS to saved contacts.',
+  subtitleStyle,
 }: Props) {
   const isBusy = loading || disabled;
   return (
@@ -44,13 +49,13 @@ export function SosButton({
               <View style={styles.iconRow}>
                 <Ionicons name="warning" size={36} color={colors.onEmergency} />
               </View>
-              <Text style={styles.label}>SOS</Text>
+              <Text style={styles.label}>{mainLabel}</Text>
               <Text style={styles.subLabel}>{emergencySubLabel}</Text>
             </>
           )}
         </View>
       </Pressable>
-      {subtitle ? <Text style={styles.hint}>{subtitle}</Text> : null}
+      {subtitle ? <Text style={[styles.hint, subtitleStyle]}>{subtitle}</Text> : null}
     </View>
   );
 }
@@ -58,7 +63,7 @@ export function SosButton({
 const styles = StyleSheet.create({
   wrap: {
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.sm,
   },
   outerRing: {
     width: '100%',

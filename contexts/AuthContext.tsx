@@ -33,6 +33,7 @@ type AuthContextValue = {
     role: UserRole;
     displayName: string;
     ngoName?: string;
+    registrationNumber?: string;
     phone?: string;
     address?: string;
   }) => Promise<boolean>;
@@ -74,20 +75,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setInitializing(false);
           return;
         }
-        const profile = await getUserProfile(fbUser.uid);
-        const mapped: AuthUser = profile
-          ? {
-              uid: profile.uid,
-              email: profile.email,
-              displayName: profile.displayName,
-              role: profile.role,
-              ngoName: profile.ngoName,
-              phone: profile.phone,
-              address: profile.address,
-            }
-          : mapFirebaseUser(fbUser);
-        setUser(mapped);
-        await saveCachedUser(mapped);
+        const uid = fbUser.uid;
+        const provisional = mapFirebaseUser(fbUser);
+
+        try {
+          const profile = await getUserProfile(uid);
+          const current = auth.currentUser;
+          if (!current || current.uid !== uid) {
+            setInitializing(false);
+            return;
+          }
+          const mapped: AuthUser = profile
+            ? {
+                uid: profile.uid,
+                email: profile.email,
+                displayName: profile.displayName,
+                role: profile.role,
+                ngoName: profile.ngoName,
+                registrationNumber: profile.registrationNumber,
+                phone: profile.phone,
+                address: profile.address,
+              }
+            : provisional;
+          setUser(mapped);
+          await saveCachedUser(mapped);
+        } catch {
+          try {
+            await saveCachedUser(provisional);
+          } catch {
+            /* ignore */
+          }
+          setUser(provisional);
+        }
+        setInitializing(false);
+        return;
       } else if (logoutInProgress.current) {
         setUser(null);
       } else {
@@ -109,7 +130,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     setBusy(true);
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
+      const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
+      const fbUser = credential.user;
+      const uid = fbUser.uid;
+      const provisional = mapFirebaseUser(fbUser);
+
+      try {
+        const profile = await getUserProfile(uid);
+        const current = auth.currentUser;
+        if (!current || current.uid !== uid) {
+          return false;
+        }
+        const mapped: AuthUser = profile
+          ? {
+              uid: profile.uid,
+              email: profile.email,
+              displayName: profile.displayName,
+              role: profile.role,
+              ngoName: profile.ngoName,
+              registrationNumber: profile.registrationNumber,
+              phone: profile.phone,
+              address: profile.address,
+            }
+          : provisional;
+        setUser(mapped);
+        await saveCachedUser(mapped);
+      } catch {
+        try {
+          await saveCachedUser(provisional);
+        } catch {
+          /* ignore */
+        }
+        setUser(provisional);
+      }
       return true;
     } catch (e) {
       setError(getAuthErrorMessage(e));
@@ -125,6 +178,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     role: UserRole;
     displayName: string;
     ngoName?: string;
+    registrationNumber?: string;
     phone?: string;
     address?: string;
   }) => {
@@ -139,6 +193,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: input.role,
         displayName: input.displayName.trim(),
         ngoName: input.ngoName,
+        registrationNumber: input.registrationNumber,
         phone: input.phone,
         address: input.address,
       });

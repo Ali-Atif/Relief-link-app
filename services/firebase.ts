@@ -9,13 +9,16 @@ import { getApp, getApps, initializeApp, type FirebaseApp } from 'firebase/app';
 import {
   type Auth,
   createUserWithEmailAndPassword,
+  getReactNativePersistence,
   getAuth,
+  initializeAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
   type User,
 } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
+import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
 import { firebaseConfig } from './firebaseConfig';
 
@@ -32,7 +35,16 @@ const app = getFirebaseApp();
  * Firebase Auth (modular v9+ API). Session + tokens are mirrored in AsyncStorage
  * via `authCache.ts` so the app can restore “signed in” state offline.
  */
-export const auth: Auth = getAuth(app);
+export const auth: Auth = (() => {
+  try {
+    return initializeAuth(app, {
+      persistence: getReactNativePersistence(ReactNativeAsyncStorage),
+    });
+  } catch {
+    // Already initialized in this runtime; return existing instance.
+    return getAuth(app);
+  }
+})();
 /** Firestore — NGO incident reports (online path). */
 export const db: Firestore = getFirestore(app);
 export { app };

@@ -1,19 +1,25 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { doc, getDoc } from 'firebase/firestore';
 import { useEffect, useRef, useState } from 'react';
-import { FlatList, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { PrimaryButton, ScreenLayout } from '../components';
 import { useAuth } from '../contexts/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
+import { db } from '../services/firebase';
 import { sendChatMessage, subscribeChatMessages, type ChatMessage } from '../services/chatService';
 import { colors, radii, spacing } from '../utils/constants';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Chat'>;
 
-export function ChatScreen({ route }: Props) {
+export function ChatScreen({ route, navigation }: Props) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
+  const [peerUserId, setPeerUserId] = useState(route.params.userId);
+  const [peerNgoId, setPeerNgoId] = useState(route.params.ngoId);
+  /** Only when survivor userId is missing from params (e.g. some notification deep links). NGOs always pass userId from SOS. */
+  const [peerIdsLoading, setPeerIdsLoading] = useState(() => !route.params.userId?.trim());
   const listRef = useRef<FlatList<ChatMessage>>(null);
 
   const scrollToEnd = () => {
@@ -24,7 +30,49 @@ export function ChatScreen({ route }: Props) {
 
   useEffect(() => subscribeChatMessages(route.params.chatId, setMessages), [route.params.chatId]);
 
-  const receiverId = user?.uid === route.params.userId ? route.params.ngoId : route.params.userId;
+  useEffect(() => {
+    const u = route.params.userId?.trim() ?? '';
+    if (u) {
+      setPeerUserId(u);
+      setPeerNgoId(route.params.ngoId?.trim() ?? '');
+      setPeerIdsLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setPeerIdsLoading(true);
+    (async () => {
+      try {
+        const snap = await getDoc(doc(db, 'chats', route.params.chatId));
+        if (cancelled || !snap.exists()) {
+          if (!cancelled) setPeerIdsLoading(false);
+          return;
+        }
+        const d = snap.data() as { userId?: string; ngoId?: string };
+        const uid = String(d.userId ?? '');
+        const nid = String(d.ngoId ?? '');
+        setPeerUserId(uid);
+        setPeerNgoId(nid);
+      } catch {
+        /* keep empty; send stays disabled */
+      } finally {
+        if (!cancelled) setPeerIdsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [route.params.chatId, route.params.userId, route.params.ngoId]);
+
+  const isSurvivor = user?.uid === peerUserId;
+  const receiverId =
+    user && peerUserId
+      ? isSurvivor
+        ? peerNgoId
+        : peerUserId
+      : '';
+  const canSend =
+    Boolean(user && peerUserId && receiverId) &&
+    (isSurvivor ? Boolean(peerNgoId) : true);
 
   const send = async () => {
     if (!user || !receiverId) return;
@@ -43,6 +91,11 @@ export function ChatScreen({ route }: Props) {
       scrollable={false}
       title={`Chat with ${route.params.otherPersonName}`}
       subtitle="Real-time NGO and user chat"
+      showBack={{
+        label: 'Back',
+        onPress: () => navigation.goBack(),
+        accessibilityLabel: 'Go back',
+      }}
     >
       <View style={styles.chatColumn}>
         <View style={styles.listWrap}>
@@ -68,12 +121,18 @@ export function ChatScreen({ route }: Props) {
           />
         </View>
         <View style={styles.composer}>
+          {peerIdsLoading ? (
+            <View style={styles.idsLoadingRow}>
+              <ActivityIndicator size="small" color={colors.primaryDark} />
+            </View>
+          ) : null}
           <TextInput
             style={styles.input}
             value={input}
             onChangeText={setInput}
             placeholder="Type your message"
             placeholderTextColor={colors.textMuted}
+            editable={Boolean(receiverId)}
             onFocus={() => {
               scrollToEnd();
               setTimeout(scrollToEnd, 250);
@@ -81,7 +140,12 @@ export function ChatScreen({ route }: Props) {
             returnKeyType="default"
             blurOnSubmit={false}
           />
-          <PrimaryButton label="Send" icon="send-outline" onPress={() => void send()} />
+          <PrimaryButton
+            label="Send"
+            icon="send-outline"
+            disabled={!canSend || peerIdsLoading}
+            onPress={() => void send()}
+          />
         </View>
       </View>
     </ScreenLayout>
@@ -132,6 +196,10 @@ const styles = StyleSheet.create({
   },
   composer: {
     gap: spacing.sm,
+  },
+  idsLoadingRow: {
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
   },
   input: {
     borderWidth: 1,

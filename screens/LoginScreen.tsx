@@ -1,7 +1,7 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute } from '@react-navigation/native';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { PrimaryButton, ScreenLayout } from '../components';
@@ -18,6 +18,7 @@ export function LoginScreen({ navigation }: Props) {
   const route = useRoute<Props['route']>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const passwordRef = useRef<TextInput>(null);
 
   useEffect(() => {
     const prefilled = route.params?.prefilledEmail?.trim();
@@ -63,11 +64,15 @@ export function LoginScreen({ navigation }: Props) {
           keyboardType="email-address"
           autoComplete="email"
           editable={!busy}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          onSubmitEditing={() => passwordRef.current?.focus()}
         />
       </View>
       <View style={styles.field}>
         <Text style={styles.label}>{t('auth.password')}</Text>
         <TextInput
+          ref={passwordRef}
           style={styles.input}
           value={password}
           onChangeText={setPassword}
@@ -75,24 +80,28 @@ export function LoginScreen({ navigation }: Props) {
           secureTextEntry
           autoComplete="password"
           editable={!busy}
+          returnKeyType="go"
+          onSubmitEditing={() => {
+            if (!busy) void login(email, password);
+          }}
         />
       </View>
-
-      <PrimaryButton
-        label={busy ? t('auth.signingIn') : t('auth.signIn')}
-        icon="log-in-outline"
-        onPress={() => login(email, password)}
-        disabled={busy}
-      />
-      {busy ? <ActivityIndicator color={colors.primary} style={styles.spinner} /> : null}
-
-      <PrimaryButton
-        label={t('auth.createAccountBtn')}
-        variant="outline"
-        icon="person-add-outline"
-        onPress={() => navigation.navigate('Register')}
-        disabled={busy}
-      />
+      <View style={styles.actions}>
+        <PrimaryButton
+          label={busy ? t('auth.signingIn') : t('auth.signIn')}
+          icon="log-in-outline"
+          onPress={() => void login(email, password)}
+          disabled={busy}
+        />
+        {busy ? <ActivityIndicator color={colors.primary} style={styles.spinner} /> : null}
+        <PrimaryButton
+          label={t('auth.createAccountBtn')}
+          variant="outline"
+          icon="person-add-outline"
+          onPress={() => navigation.navigate('Register')}
+          disabled={busy}
+        />
+      </View>
     </ScreenLayout>
   );
 }
@@ -156,6 +165,10 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   spinner: {
-    marginTop: -spacing.sm,
+    marginVertical: spacing.xs,
+  },
+  actions: {
+    marginTop: spacing.sm,
+    gap: spacing.md,
   },
 });

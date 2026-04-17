@@ -1,7 +1,11 @@
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
 
+import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import type { RootStackParamList } from '../navigation/types';
 import { runSosEmergency } from '../services/sosService';
 
 /**
@@ -9,6 +13,8 @@ import { runSosEmergency } from '../services/sosService';
  */
 export function useSosEmergency() {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [sosLoading, setSosLoading] = useState(false);
 
   const triggerSos = useCallback(async () => {
@@ -19,7 +25,7 @@ export function useSosEmergency() {
       if (result.ok) {
         const ngoLine =
           result.notifiedNgoCount > 0
-            ? `\n\n${result.notifiedNgoCount} NGO account(s) also received this SOS request.`
+            ? `\n\n${t('sos.successNgoLine', { count: result.notifiedNgoCount })}`
             : '';
         Alert.alert(
           t('sos.alertSuccessTitle'),
@@ -29,12 +35,20 @@ export function useSosEmergency() {
       }
 
       switch (result.reason) {
-        case 'no_contacts':
-          Alert.alert(
-            t('sos.noContactsTitle'),
-            `${t('sos.noContactsMsg')}\n\n${result.notifiedNgoCount ?? 0} NGO account(s) were still notified.`,
-          );
+        case 'no_contacts': {
+          const ngoExtra =
+            (result.notifiedNgoCount ?? 0) > 0
+              ? `\n\n${t('sos.noContactsNgoNotifiedLine', { count: result.notifiedNgoCount ?? 0 })}`
+              : `\n\n${user ? t('sos.noContactsNgoZeroLine') : t('sos.noContactsGuestNgoLine')}`;
+          Alert.alert(t('sos.noContactsTitle'), `${t('sos.noContactsMsg')}${ngoExtra}`, [
+            { text: t('sos.noContactsNotNow'), style: 'cancel' },
+            {
+              text: t('sos.addEmergencyContact'),
+              onPress: () => navigation.navigate('AddContact'),
+            },
+          ]);
           break;
+        }
         case 'permission_denied':
           Alert.alert(t('sos.permissionTitle'), t('sos.permissionMsg'));
           break;
@@ -59,7 +73,7 @@ export function useSosEmergency() {
     } finally {
       setSosLoading(false);
     }
-  }, [t]);
+  }, [navigation, t, user]);
 
   return { sosLoading, triggerSos };
 }

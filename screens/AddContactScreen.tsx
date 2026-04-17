@@ -1,11 +1,12 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { PrimaryButton, ScreenLayout } from '../components';
+import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useTranslatedHeader } from '../hooks/useTranslatedHeader';
 import { addEmergencyContact } from '../services/emergencyContactsStorage';
+import { sendPendingSosSmsToNewContact } from '../services/sosService';
 import type { RootStackParamList } from '../navigation/types';
 import { colors, spacing } from '../utils/constants';
 import { validatePhoneNumber } from '../utils/phoneValidation';
@@ -13,8 +14,17 @@ import { validatePhoneNumber } from '../utils/phoneValidation';
 type Props = NativeStackScreenProps<RootStackParamList, 'AddContact'>;
 
 export function AddContactScreen({ navigation }: Props) {
-  const { t } = useLanguage();
-  useTranslatedHeader(navigation, 'nav.addContact');
+  const { user } = useAuth();
+  const { t, language } = useLanguage();
+  const heroDirection = language === 'ur' ? 'rtl' : 'ltr';
+
+  const onBack = useCallback(() => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('Contacts' as never);
+    }
+  }, [navigation]);
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -38,7 +48,15 @@ export function AddContactScreen({ navigation }: Props) {
 
     setSaving(true);
     try {
-      await addEmergencyContact({ name: nameTrim, phone: phoneCheck.value });
+      await addEmergencyContact({ name: nameTrim, phone: phoneCheck.value }, user?.uid);
+      const pendingSms = await sendPendingSosSmsToNewContact(phoneCheck.value, user?.uid);
+      if (pendingSms.status === 'opened') {
+        Alert.alert(t('sos.pendingSmsOpenedTitle'), t('sos.pendingSmsOpenedMsg'));
+      } else if (pendingSms.status === 'sms_unavailable') {
+        Alert.alert(t('sos.smsNoTitle'), t('sos.smsNoMsgWithLink', { url: pendingSms.mapsUrl }));
+      } else if (pendingSms.status === 'cancelled') {
+        Alert.alert(t('sos.cancelTitle'), t('sos.pendingSmsStillQueuedMsg'));
+      }
       navigation.goBack();
     } catch {
       Alert.alert(t('addContact.saveFailTitle'), t('addContact.tryAgain'));
@@ -48,7 +66,16 @@ export function AddContactScreen({ navigation }: Props) {
   };
 
   return (
-    <ScreenLayout title={t('nav.addContact')} subtitle={t('addContact.subtitle')}>
+    <ScreenLayout
+      title={t('nav.addContact')}
+      subtitle={t('addContact.subtitle')}
+      showBack={{
+        label: t('contacts.backChip'),
+        onPress: onBack,
+        accessibilityLabel: t('contacts.backChip'),
+      }}
+      heroDirection={heroDirection}
+    >
       <View style={styles.field}>
         <Text style={styles.label}>{t('addContact.name')}</Text>
         <TextInput

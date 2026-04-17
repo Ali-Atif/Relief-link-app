@@ -22,6 +22,7 @@ export type UserProfile = {
   email: string | null;
   displayName: string;
   ngoName?: string;
+  registrationNumber?: string;
   phone?: string;
   address?: string;
   createdAtIso?: string;
@@ -42,6 +43,7 @@ function mapDoc(snap: QueryDocumentSnapshot<DocumentData>): UserProfile {
     email: (data.email as string | null | undefined) ?? null,
     displayName: (data.displayName as string | undefined) ?? 'Member',
     ngoName: data.ngoName as string | undefined,
+    registrationNumber: data.registrationNumber as string | undefined,
     phone: data.phone as string | undefined,
     address: data.address as string | undefined,
     createdAtIso: tsToIso(data.createdAt as Timestamp | null | undefined),
@@ -57,6 +59,7 @@ export async function saveUserProfile(profile: UserProfile): Promise<void> {
       email: profile.email ?? null,
       displayName: profile.displayName.trim(),
       ngoName: profile.ngoName?.trim() ?? null,
+      registrationNumber: profile.registrationNumber?.trim() ?? null,
       phone: profile.phone?.trim() ?? null,
       address: profile.address?.trim() ?? null,
       createdAt: serverTimestamp(),
@@ -75,6 +78,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
     email: (data.email as string | null | undefined) ?? null,
     displayName: (data.displayName as string | undefined) ?? 'Member',
     ngoName: data.ngoName as string | undefined,
+    registrationNumber: data.registrationNumber as string | undefined,
     phone: data.phone as string | undefined,
     address: data.address as string | undefined,
     createdAtIso: tsToIso(data.createdAt as Timestamp | null | undefined),

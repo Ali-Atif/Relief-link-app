@@ -16,8 +16,9 @@ import {
 } from 'firebase/firestore';
 
 import { db } from './firebase';
+import { getChatThreadId, parseChatThreadId } from './chatThreadIds';
 import { sendNotification } from './notificationsService';
-import { assignNgoToSosAlert } from './sosAlertsService';
+import { getSosAlertById, normalizeToModernStatus } from './sosAlertsService';
 
 export type ChatThread = {
   id: string;
@@ -34,6 +35,12 @@ export type ChatMessage = {
   senderName: string;
   text: string;
   createdAtIso?: string;
+};
+
+export type AlertChatThreadRow = {
+  threadId: string;
+  ngoId: string;
+  ngoName: string;
 };
 
 const CHATS_COLLECTION = 'chats';
@@ -56,6 +63,10 @@ function mapMessage(snap: QueryDocumentSnapshot<DocumentData>): ChatMessage {
   };
 }
 
+/**
+ * Ensures a dedicated `chats/{alertId}__{ngoId}` thread exists for this NGO.
+ * Does not change SOS status (that remains explicit "Mark in progress").
+ */
 export async function ensureChatForAlert(input: {
   alertId: string;
   userId: string;
@@ -63,27 +74,45 @@ export async function ensureChatForAlert(input: {
   ngoName: string;
   userName: string;
 }): Promise<ChatThread> {
-  const chatId = input.alertId;
-  const chatRef = doc(db, CHATS_COLLECTION, chatId);
-  const existing = await getDoc(chatRef);
-  if (!existing.exists()) {
-    await setDoc(chatRef, {
-      alertId: input.alertId,
-      userId: input.userId,
-      ngoId: input.ngoId,
-      createdAt: serverTimestamp(),
-    });
-    await assignNgoToSosAlert(input.alertId, input.ngoId, input.ngoName);
-    await sendNotification({
-      userId: input.userId,
-      type: 'chat',
-      title: 'NGO started chat',
-      body: `${input.ngoName} started helping you in chat.`,
-    });
+  const alert = await getSosAlertById(input.alertId);
+  if (!alert) {
+    throw new Error('ALERT_NOT_FOUND');
+  }
+  const normStatus = normalizeToModernStatus(alert.status);
+  if (normStatus === 'resolved') {
+    throw new Error('ALERT_ALREADY_RESOLVED');
   }
 
+  const assignedOnAlert = String(alert.ngoId ?? '');
+  if (normStatus === 'in_progress' && assignedOnAlert && assignedOnAlert !== input.ngoId) {
+    throw new Error('ALERT_ALREADY_ASSIGNED');
+  }
+
+  const threadId = getChatThreadId(input.alertId, input.ngoId);
+  const chatRef = doc(db, CHATS_COLLECTION, threadId);
+  const existing = await getDoc(chatRef);
+
+  if (existing.exists()) {
+    const data = existing.data();
+    return {
+      id: threadId,
+      alertId: input.alertId,
+      userId: String(data?.userId ?? input.userId),
+      ngoId: String(data?.ngoId ?? input.ngoId),
+    };
+  }
+
+  await setDoc(chatRef, {
+    alertId: input.alertId,
+    userId: input.userId,
+    ngoId: input.ngoId,
+    ngoName: input.ngoName.trim() || 'NGO',
+    openAccess: normStatus === 'pending',
+    createdAt: serverTimestamp(),
+  });
+
   return {
-    id: chatId,
+    id: threadId,
     alertId: input.alertId,
     userId: input.userId,
     ngoId: input.ngoId,
@@ -108,11 +137,16 @@ export async function sendChatMessage(input: {
     createdAt: serverTimestamp(),
   });
 
+  const parsed = parseChatThreadId(input.chatId);
+  const alertIdForNotify = parsed?.alertId ?? input.chatId;
+
   await sendNotification({
     userId: input.receiverId,
     type: 'chat',
     title: 'New chat message',
     body: `${input.senderName}: ${cleanText}`,
+    chatId: input.chatId,
+    alertId: alertIdForNotify,
   });
 }
 
@@ -126,5 +160,29 @@ export function subscribeChatMessages(
       .map(mapMessage)
       .sort((a, b) => (a.createdAtIso ?? '').localeCompare(b.createdAtIso ?? ''));
     onChange(messages);
+  });
+}
+
+/** SOS threads for this alert where the survivor is the listed user (parallel NGO conversations). */
+export function subscribeChatThreadsForAlertUser(
+  alertId: string,
+  survivorUserId: string,
+  onChange: (threads: AlertChatThreadRow[]) => void,
+): Unsubscribe {
+  const q = query(collection(db, CHATS_COLLECTION), where('alertId', '==', alertId), limit(30));
+  return onSnapshot(q, (snap) => {
+    const threads: AlertChatThreadRow[] = [];
+    for (const d of snap.docs) {
+      const data = d.data();
+      if (String(data.userId ?? '') !== survivorUserId) continue;
+      const ngoId = String(data.ngoId ?? '');
+      if (!ngoId) continue;
+      threads.push({
+        threadId: d.id,
+        ngoId,
+        ngoName: String(data.ngoName ?? 'NGO'),
+      });
+    }
+    onChange(threads);
   });
 }

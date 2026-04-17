@@ -43,7 +43,10 @@
           "locationWhenInUsePermission": "ReliefLink uses your location when you choose to share it during an emergency.",
           "locationAlwaysAndWhenInUsePermission": "ReliefLink may use your location when you enable related safety features."
         }
-      ]
+      ],
+      "expo-audio",
+      "expo-video",
+      "expo-asset"
     ]
   }
 }

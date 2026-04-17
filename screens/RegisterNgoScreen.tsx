@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import type { AuthStackParamList } from '../navigation/types';
 import { colors, spacing } from '../utils/constants';
+import { validatePhoneNumber } from '../utils/phoneValidation';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'RegisterNgo'>;
 
@@ -15,9 +16,8 @@ export function RegisterNgoScreen({ navigation }: Props) {
   const { register, error, clearError, busy } = useAuth();
   const { t } = useLanguage();
   const [ngoName, setNgoName] = useState('');
-  const [contactName, setContactName] = useState('');
+  const [registrationNumber, setRegistrationNumber] = useState('');
   const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -33,8 +33,26 @@ export function RegisterNgoScreen({ navigation }: Props) {
 
   const handleRegister = async () => {
     setLocalError(null);
-    if (!ngoName.trim() || !contactName.trim() || !phone.trim()) {
-      setLocalError(t('auth.ngoFieldsRequired'));
+    if (!ngoName.trim()) {
+      setLocalError(t('auth.ngoNameRequired'));
+      return;
+    }
+    if (!registrationNumber.trim()) {
+      setLocalError(t('auth.ngoRegNoRequired'));
+      return;
+    }
+    const phoneCheck = validatePhoneNumber(phone);
+    if (!phoneCheck.valid) {
+      setLocalError(t(`phone.${phoneCheck.errorKey}`));
+      return;
+    }
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail) {
+      setLocalError(t('auth.emailRequired'));
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setLocalError(t('auth.emailInvalid'));
       return;
     }
     if (password !== confirm) {
@@ -46,13 +64,13 @@ export function RegisterNgoScreen({ navigation }: Props) {
       return;
     }
     const ok = await register({
-      email,
+      email: normalizedEmail,
       password,
       role: 'ngo',
-      displayName: contactName,
-      ngoName,
-      phone,
-      address,
+      displayName: ngoName.trim(),
+      ngoName: ngoName.trim(),
+      phone: phoneCheck.value,
+      registrationNumber: registrationNumber.trim(),
     });
     if (ok) {
       navigation.dispatch(
@@ -78,12 +96,12 @@ export function RegisterNgoScreen({ navigation }: Props) {
         />
       </View>
       <View style={styles.field}>
-        <Text style={styles.label}>{t('auth.contactPerson')}</Text>
+        <Text style={styles.label}>{t('auth.registrationNumber')}</Text>
         <TextInput
           style={styles.input}
-          value={contactName}
-          onChangeText={setContactName}
-          placeholder={t('auth.phContactPerson')}
+          value={registrationNumber}
+          onChangeText={setRegistrationNumber}
+          placeholder={t('auth.phRegistrationNumber')}
           editable={!busy}
         />
       </View>
@@ -95,16 +113,7 @@ export function RegisterNgoScreen({ navigation }: Props) {
           onChangeText={setPhone}
           placeholder={t('auth.phNgoPhone')}
           keyboardType="phone-pad"
-          editable={!busy}
-        />
-      </View>
-      <View style={styles.field}>
-        <Text style={styles.label}>{t('auth.address')}</Text>
-        <TextInput
-          style={styles.input}
-          value={address}
-          onChangeText={setAddress}
-          placeholder={t('auth.phNgoAddress')}
+          autoComplete="tel"
           editable={!busy}
         />
       </View>
@@ -117,6 +126,7 @@ export function RegisterNgoScreen({ navigation }: Props) {
           placeholder={t('auth.phEmail')}
           autoCapitalize="none"
           keyboardType="email-address"
+          autoComplete="email"
           editable={!busy}
         />
       </View>
@@ -143,20 +153,22 @@ export function RegisterNgoScreen({ navigation }: Props) {
         />
       </View>
 
-      <PrimaryButton
-        label={busy ? t('auth.creating') : t('auth.createAccountSubmit')}
-        icon="business-outline"
-        onPress={handleRegister}
-        disabled={busy}
-      />
-      {busy ? <ActivityIndicator color={colors.primary} style={styles.spinner} /> : null}
-
-      <PrimaryButton
-        label={t('auth.backToRegisterOptions')}
-        variant="outline"
-        icon="arrow-back-outline"
-        onPress={() => navigation.navigate('Register')}
-      />
+      <View style={styles.actions}>
+        <PrimaryButton
+          label={busy ? t('auth.creating') : t('auth.createAccountSubmit')}
+          icon="business-outline"
+          onPress={handleRegister}
+          disabled={busy}
+        />
+        {busy ? <ActivityIndicator color={colors.primary} style={styles.spinner} /> : null}
+        <PrimaryButton
+          label={t('auth.backToRegisterOptions')}
+          variant="outline"
+          icon="arrow-back-outline"
+          onPress={() => navigation.navigate('Register')}
+          disabled={busy}
+        />
+      </View>
     </ScreenLayout>
   );
 }
@@ -186,6 +198,10 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   spinner: {
-    marginTop: -spacing.sm,
+    marginVertical: spacing.xs,
+  },
+  actions: {
+    marginTop: spacing.sm,
+    gap: spacing.md,
   },
 });

@@ -36,6 +36,15 @@ export function RegisterUserScreen({ navigation }: Props) {
       setLocalError(t('auth.nameRequired'));
       return;
     }
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail) {
+      setLocalError(t('auth.emailRequired'));
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setLocalError(t('auth.emailInvalid'));
+      return;
+    }
     const phoneCheck = validatePhoneNumber(phone);
     if (!phoneCheck.valid) {
       setLocalError(t(`phone.${phoneCheck.errorKey}`));
@@ -50,10 +59,10 @@ export function RegisterUserScreen({ navigation }: Props) {
       return;
     }
     const ok = await register({
-      email,
+      email: normalizedEmail,
       password,
       role: 'user',
-      displayName: name,
+      displayName: name.trim(),
       phone: phoneCheck.value,
     });
     if (ok) {
@@ -132,21 +141,22 @@ export function RegisterUserScreen({ navigation }: Props) {
         />
       </View>
 
-      <PrimaryButton
-        label={busy ? t('auth.creating') : t('auth.createAccountSubmit')}
-        icon="person-add-outline"
-        onPress={handleRegister}
-        disabled={busy}
-      />
-      {busy ? <ActivityIndicator color={colors.primary} style={styles.spinner} /> : null}
-
-      <PrimaryButton
-        label={t('auth.backToRegisterOptions')}
-        variant="outline"
-        icon="arrow-back-outline"
-        onPress={() => navigation.navigate('Register')}
-        disabled={busy}
-      />
+      <View style={styles.actions}>
+        <PrimaryButton
+          label={busy ? t('auth.creating') : t('auth.createAccountSubmit')}
+          icon="person-add-outline"
+          onPress={handleRegister}
+          disabled={busy}
+        />
+        {busy ? <ActivityIndicator color={colors.primary} style={styles.spinner} /> : null}
+        <PrimaryButton
+          label={t('auth.backToRegisterOptions')}
+          variant="outline"
+          icon="arrow-back-outline"
+          onPress={() => navigation.navigate('Register')}
+          disabled={busy}
+        />
+      </View>
     </ScreenLayout>
   );
 }
@@ -176,6 +186,10 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   spinner: {
-    marginTop: -spacing.sm,
+    marginVertical: spacing.xs,
+  },
+  actions: {
+    marginTop: spacing.sm,
+    gap: spacing.md,
   },
 });

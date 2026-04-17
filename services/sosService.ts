@@ -1,5 +1,5 @@
 /**
- * SOS flow: load saved emergency contacts → request GPS → open SMS with location link.
+ * SOS flow: GPS → create NGO alert (when signed in) → SMS to emergency contacts (or save pending SMS).
  * Used by `useSosEmergency` / `SosButton` on the home screen.
  */
 
@@ -10,6 +10,7 @@ import { auth } from './firebase';
 import { getEmergencyContacts } from './emergencyContactsStorage';
 import { createSosAlert } from './sosAlertsService';
 import { getUserProfile } from './userProfiles';
+import { getItem, removeItem, setItem } from './storage';
 
 export type SosFailureReason =
   | 'no_contacts'
@@ -22,6 +23,42 @@ export type SosResult =
   | { ok: true; recipientCount: number; mapsUrl: string; notifiedNgoCount: number }
   | { ok: false; reason: SosFailureReason; mapsUrl?: string; notifiedNgoCount?: number };
 
+const PENDING_SOS_SMS_KEY_PREFIX = 'relieflink_pending_sos_sms';
+
+export type PendingSosSmsPayload = {
+  /** Firestore alert id when signed in; omitted for guest-only flow */
+  alertId?: string;
+  mapsUrl: string;
+  userName: string;
+  userEmail: string | null;
+  userPhone: string;
+  savedAtIso: string;
+};
+
+function pendingSosSmsKey(userId?: string): string {
+  return `${PENDING_SOS_SMS_KEY_PREFIX}:${userId?.trim() || 'guest'}`;
+}
+
+export async function savePendingSosSmsPayload(payload: PendingSosSmsPayload, userId?: string): Promise<void> {
+  await setItem(pendingSosSmsKey(userId), JSON.stringify(payload));
+}
+
+export async function loadPendingSosSmsPayload(userId?: string): Promise<PendingSosSmsPayload | null> {
+  const raw = await getItem(pendingSosSmsKey(userId));
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as PendingSosSmsPayload;
+    if (!parsed?.mapsUrl || typeof parsed.mapsUrl !== 'string') return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export async function clearPendingSosSmsPayload(userId?: string): Promise<void> {
+  await removeItem(pendingSosSmsKey(userId));
+}
+
 /** Builds a Google Maps link from coordinates (works offline in the SMS body). */
 export function buildGoogleMapsUrl(latitude: number, longitude: number): string {
   return `https://maps.google.com/?q=${latitude},${longitude}`;
@@ -32,13 +69,70 @@ function normalizePhones(contacts: { phone: string }[]): string[] {
   return [...new Set(raw)];
 }
 
+export function buildSosSmsBody(input: {
+  userName: string;
+  userEmail: string | null;
+  userPhone: string;
+  mapsUrl: string;
+}): string {
+  const whoLines = [
+    `Name: ${input.userName}`,
+    input.userEmail ? `Email: ${input.userEmail}` : null,
+    input.userPhone ? `Phone: ${input.userPhone}` : null,
+  ]
+    .filter(Boolean)
+    .join('\n');
+  return `I am in danger.\n${whoLines}\nLocation: ${input.mapsUrl}`;
+}
+
+export type SendPendingSosSmsResult =
+  | { status: 'no_pending' }
+  | { status: 'opened' }
+  | { status: 'cancelled' }
+  | { status: 'sms_unavailable'; mapsUrl: string };
+
 /**
- * Runs the SOS pipeline: contacts (offline) → location → SMS composer.
- * Order is optimized: fail fast if there are no saved contacts before using GPS.
+ * After the user adds an emergency contact, send the *same* SOS text (same map link / details)
+ * to that number only. Does not create another NGO alert.
+ */
+export async function sendPendingSosSmsToNewContact(
+  normalizedPhone: string,
+  userId?: string,
+): Promise<SendPendingSosSmsResult> {
+  const pending = await loadPendingSosSmsPayload(userId);
+  if (!pending) return { status: 'no_pending' };
+
+  const phone = normalizedPhone.replace(/\s+/g, '').trim();
+  if (!phone) return { status: 'no_pending' };
+
+  const message = buildSosSmsBody({
+    userName: pending.userName,
+    userEmail: pending.userEmail,
+    userPhone: pending.userPhone,
+    mapsUrl: pending.mapsUrl,
+  });
+
+  const smsOk = await SMS.isAvailableAsync();
+  if (!smsOk) {
+    return { status: 'sms_unavailable', mapsUrl: pending.mapsUrl };
+  }
+
+  const smsResult = await SMS.sendSMSAsync([phone], message);
+  if (smsResult.result === 'cancelled') {
+    return { status: 'cancelled' };
+  }
+
+  await clearPendingSosSmsPayload(userId);
+  return { status: 'opened' };
+}
+
+/**
+ * Runs the SOS pipeline: location → NGO alert (signed-in) → SMS to all saved contacts, or store pending SMS if none.
  */
 export async function runSosEmergency(): Promise<SosResult> {
-  const contacts = await getEmergencyContacts();
-  const phones = normalizePhones(contacts);
+  const user = auth.currentUser;
+  const contactsForCurrentUser = await getEmergencyContacts(user?.uid);
+  const phones = normalizePhones(contactsForCurrentUser);
 
   const perm = await Location.requestForegroundPermissionsAsync();
   if (perm.status !== 'granted') {
@@ -56,7 +150,6 @@ export async function runSosEmergency(): Promise<SosResult> {
   }
 
   const mapsUrl = buildGoogleMapsUrl(coords.latitude, coords.longitude);
-  const user = auth.currentUser;
   let profile: Awaited<ReturnType<typeof getUserProfile>> = null;
   if (user) {
     try {
@@ -82,21 +175,31 @@ export async function runSosEmergency(): Promise<SosResult> {
     : { alertId: '', notifiedNgoCount: 0 };
 
   if (phones.length === 0) {
-    return { ok: false, reason: 'no_contacts', mapsUrl, notifiedNgoCount: sosEvent.notifiedNgoCount };
+    await savePendingSosSmsPayload(
+      {
+        alertId: sosEvent.alertId || undefined,
+        mapsUrl,
+        userName,
+        userEmail,
+        userPhone,
+        savedAtIso: new Date().toISOString(),
+      },
+      user?.uid,
+    );
+    return {
+      ok: false,
+      reason: 'no_contacts',
+      mapsUrl,
+      notifiedNgoCount: sosEvent.notifiedNgoCount,
+    };
   }
 
-  const whoLines = [
-    `Name: ${userName}`,
-    userEmail ? `Email: ${userEmail}` : null,
-    userPhone ? `Phone: ${userPhone}` : null,
-  ]
-    .filter(Boolean)
-    .join('\n');
-  const message = `I am in danger.\n${whoLines}\nLocation: ${mapsUrl}`;
+  await clearPendingSosSmsPayload(user?.uid);
+
+  const message = buildSosSmsBody({ userName, userEmail, userPhone, mapsUrl });
 
   const smsOk = await SMS.isAvailableAsync();
   if (!smsOk) {
-    // Location already known — include link so the user can copy/share manually.
     return { ok: false, reason: 'sms_not_supported', mapsUrl, notifiedNgoCount: sosEvent.notifiedNgoCount };
   }
 
@@ -106,6 +209,5 @@ export async function runSosEmergency(): Promise<SosResult> {
     return { ok: false, reason: 'sms_cancelled', notifiedNgoCount: sosEvent.notifiedNgoCount };
   }
 
-  // Android often returns 'unknown' even when the user sent the message — treat as success.
   return { ok: true, recipientCount: phones.length, mapsUrl, notifiedNgoCount: sosEvent.notifiedNgoCount };
 }

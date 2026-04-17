@@ -1,38 +1,47 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { StyleSheet, Text, View } from 'react-native';
+import { useCallback } from 'react';
+import { StyleSheet, View } from 'react-native';
 
 import { PrimaryButton, ScreenLayout } from '../components';
 import { useLanguage } from '../contexts/LanguageContext';
 import type { AuthStackParamList } from '../navigation/types';
-import { colors } from '../utils/constants';
+import { colors, spacing } from '../utils/constants';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 
 export function RegisterScreen({ navigation }: Props) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const heroDirection = language === 'ur' ? 'rtl' : 'ltr';
+
+  const onBack = useCallback(() => {
+    navigation.navigate('Login');
+  }, [navigation]);
 
   return (
-    <ScreenLayout title={t('auth.registerScreenTitle')} subtitle={t('auth.registerOptionsSubtitle')}>
+    <ScreenLayout
+      title={t('auth.registerScreenTitle')}
+      subtitle={t('auth.registerOptionsSubtitle')}
+      heroDirection={heroDirection}
+    >
       <View style={styles.card}>
-        <Text style={styles.title}>{t('auth.registerAs')}</Text>
+        <PrimaryButton
+          label={t('auth.registerAsNgo')}
+          icon="business-outline"
+          onPress={() => navigation.navigate('RegisterNgo')}
+        />
+
         <PrimaryButton
           label={t('auth.registerAsUser')}
           icon="person-outline"
           onPress={() => navigation.navigate('RegisterUser')}
         />
         <PrimaryButton
-          label={t('auth.registerAsNgo')}
-          icon="medkit-outline"
-          onPress={() => navigation.navigate('RegisterNgo')}
+          label={t('auth.backToSignIn')}
+          icon="arrow-back-outline"
+          variant="outline"
+          onPress={onBack}
         />
       </View>
-
-      <PrimaryButton
-        label={t('auth.backToSignIn')}
-        variant="outline"
-        icon="arrow-back-outline"
-        onPress={() => navigation.navigate('Login', {})}
-      />
     </ScreenLayout>
   );
 }
@@ -43,12 +52,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 12,
     backgroundColor: colors.surface,
-    padding: 16,
-    gap: 12,
-  },
-  title: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '700',
+    padding: spacing.md,
+    gap: spacing.md,
+    marginTop: spacing.sm,
   },
 });

@@ -24,6 +24,10 @@ export type AppNotification = {
   type: 'sos' | 'chat' | 'system';
   createdAtIso?: string;
   read: boolean;
+  /** Optional: used to deep-link into a specific chat. */
+  chatId?: string;
+  /** Optional: used to deep-link into a specific SOS alert. */
+  alertId?: string;
 };
 
 const NOTIFICATIONS_COLLECTION = 'notifications';
@@ -43,6 +47,8 @@ function mapNotification(snap: QueryDocumentSnapshot<DocumentData>): AppNotifica
     type: (data.type as AppNotification['type']) ?? 'system',
     createdAtIso: tsToIso(data.createdAt as Timestamp | null | undefined),
     read: Boolean(data.read),
+    chatId: (data.chatId as string | undefined) ?? undefined,
+    alertId: (data.alertId as string | undefined) ?? undefined,
   };
 }
 
@@ -51,6 +57,8 @@ export async function sendNotification(input: {
   title: string;
   body: string;
   type: AppNotification['type'];
+  chatId?: string;
+  alertId?: string;
 }): Promise<void> {
   await addDoc(collection(db, NOTIFICATIONS_COLLECTION), {
     userId: input.userId,
@@ -58,6 +66,8 @@ export async function sendNotification(input: {
     body: input.body,
     type: input.type,
     read: false,
+    chatId: input.chatId ?? null,
+    alertId: input.alertId ?? null,
     createdAt: serverTimestamp(),
   });
 }
