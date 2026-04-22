@@ -24,6 +24,7 @@ import { RegisterScreen } from "../screens/RegisterScreen";
 import { RegisterUserScreen } from "../screens/RegisterUserScreen";
 import { QuizScreen } from "../screens/QuizScreen";
 import { ReportScreen } from "../screens/ReportScreen";
+import { SosHistoryScreen } from "../screens/SosHistoryScreen";
 import { SOSScreen } from "../screens/SOSScreen";
 import { colors } from "../utils/constants";
 import { getActiveRouteName } from "./getActiveRouteName";
@@ -108,6 +109,7 @@ export function RootNavigator() {
               <Stack.Screen name="Guides" component={GuidesScreen} />
               <Stack.Screen name="GuideDetail" component={GuideDetailScreen} />
               <Stack.Screen name="Quiz" component={QuizScreen} />
+              <Stack.Screen name="SosHistory" component={SosHistoryScreen} />
               <Stack.Screen name="Chat" component={ChatScreen} />
             </Stack.Navigator>
           </View>

@@ -14,6 +14,7 @@ export type RootStackParamList = {
   Guides: undefined;
   GuideDetail: { guideId: string; title?: string };
   Quiz: undefined;
+  SosHistory: undefined;
   Chat: {
     chatId: string;
     alertId: string;

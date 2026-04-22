@@ -241,13 +241,23 @@ export function subscribeLatestSosAlerts(onChange: (items: SosAlert[]) => void):
   });
 }
 
+const USER_SOS_HISTORY_LIMIT = 500;
+
+/**
+ * Listens to this user's SOS docs. Uses `where` + `limit` only (no composite index).
+ * Results are sorted by `createdAt` on the client. If you ever need strict ordering
+ * for users with 500+ alerts, add a composite index and use `orderBy('createdAt', 'desc')`.
+ */
 export function subscribeUserSosAlerts(userId: string, onChange: (items: SosAlert[]) => void): Unsubscribe {
-  const q = query(collection(db, SOS_ALERTS_COLLECTION), where('userId', '==', userId), limit(40));
+  const q = query(
+    collection(db, SOS_ALERTS_COLLECTION),
+    where('userId', '==', userId),
+    limit(USER_SOS_HISTORY_LIMIT),
+  );
   return onSnapshot(q, (snap) => {
     const rows = snap.docs
       .map(mapAlert)
-      .sort((a, b) => (b.createdAtIso ?? '').localeCompare(a.createdAtIso ?? ''))
-      .slice(0, 20);
+      .sort((a, b) => (b.createdAtIso ?? '').localeCompare(a.createdAtIso ?? ''));
     onChange(rows);
   });
 }

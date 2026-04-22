@@ -59,6 +59,10 @@ export function mapStackRouteToTabKey(route: string | undefined): string {
     case 'Contacts':
     case 'AddContact':
       return 'Contacts';
+    case 'SosHistory':
+    case 'Notifications':
+    case 'Chat':
+      return 'Home';
     case 'Home':
     case 'Profile':
     case 'SOS':

@@ -2,69 +2,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { NotificationBell, ScreenLayout, SosButton } from '../components';
+import { NotificationBell, ScreenLayout, SosButton, SosRequestCard } from '../components';
 import QuickTile from '../components/newUI/QuickTile';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useNotifications } from '../hooks/useNotifications';
 import type { RootStackParamList } from '../navigation/types';
 import { getDailySafetyTip } from '../services/safetyTips';
-import { subscribeChatThreadsForAlertUser } from '../services/chatService';
-import { getChatThreadId } from '../services/chatThreadIds';
-import { rerequestSosAlert, type SosAlert, subscribeUserSosAlerts } from '../services/sosAlertsService';
+import { type SosAlert, subscribeUserSosAlerts } from '../services/sosAlertsService';
 import { spacing, radii, colors } from '../utils/constants';
-import { displaySosStatus } from '../utils/sosStatusDisplay';
 import { blockDirection, flexRowWithDirection, gridRowDirection } from '../utils/layoutRtl';
-import { openMapsLink } from '../utils/openMapsLink';
 import { useAuth } from '../contexts/AuthContext';
-
-type PendingThreadsProps = {
-  alertId: string;
-  survivorUserId: string;
-  textAlign: 'left' | 'right';
-  direction: 'ltr' | 'rtl';
-  t: (key: string, vars?: Record<string, string | number>) => string;
-  navigation: NativeStackNavigationProp<RootStackParamList>;
-};
-
-function PendingAlertChatThreads({
-  alertId,
-  survivorUserId,
-  textAlign,
-  direction,
-  t,
-  navigation,
-}: PendingThreadsProps) {
-  const [threads, setThreads] = React.useState<
-    Array<{ threadId: string; ngoId: string; ngoName: string }>
-  >([]);
-
-  useEffect(() => subscribeChatThreadsForAlertUser(alertId, survivorUserId, setThreads), [alertId, survivorUserId]);
-
-  if (threads.length === 0) return null;
-
-  return (
-    <View style={[styles.threadList, blockDirection(direction)]}>
-      {threads.map((th) => (
-        <Pressable
-          key={th.threadId}
-          onPress={() =>
-            navigation.navigate('Chat', {
-              chatId: th.threadId,
-              alertId,
-              userId: survivorUserId,
-              ngoId: th.ngoId,
-              otherPersonName: th.ngoName,
-            })
-          }
-        >
-          <Text style={[styles.markReadText, { textAlign }]}>{t('home.openChatWithNgo', { name: th.ngoName })}</Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
 
 export function HomeScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -84,25 +33,6 @@ export function HomeScreen() {
 
   const handleLanguageToggle = async () => {
     await toggleLanguage();
-  };
-
-  const normalizeStatus = (status: SosAlert['status']): 'pending' | 'in_progress' | 'resolved' => {
-    if (status === 'open') return 'pending';
-    if (status === 'in_chat') return 'in_progress';
-    return status;
-  };
-
-  const handleRerequest = async (alert: SosAlert) => {
-    if (!user) return;
-    setRerequestingAlertId(alert.id);
-    try {
-      await rerequestSosAlert(alert.id, user.uid);
-      Alert.alert(t('home.reRequestSuccess'));
-    } catch {
-      Alert.alert(t('home.reRequestError'));
-    } finally {
-      setRerequestingAlertId(null);
-    }
   };
 
   // Helper for RTL text alignment
@@ -253,86 +183,36 @@ export function HomeScreen() {
       {/* Notifications are now only shown in the Notifications screen. */}
 
       <View style={[styles.whyCard, blockDirection(direction)]}>
-        <Text style={[styles.whyTitle, { textAlign }]}>{t('home.yourSosApplications')}</Text>
-        {myAlerts.slice(0, 3).map((alert) => (
-          <View key={alert.id} style={styles.notificationRow}>
-            {(() => {
-              const status = normalizeStatus(alert.status);
-              const assignedNgoId = alert.ngoId;
-              const statusLine =
-                status === 'in_progress' && alert.ngoName
-                  ? t('home.sosInProgressBy', { name: alert.ngoName })
-                  : displaySosStatus(status, t);
-              return (
-                <>
-            <Text style={[styles.notificationTitle, { textAlign }]}>
-              {t('home.sosStatusLine', { status: statusLine })}
-            </Text>
-            <Text style={[styles.notificationText, { textAlign }]}>{`${alert.userName} · ${alert.userEmail ?? '—'}`}</Text>
-            {alert.userPhone ? (
-              <Text style={[styles.notificationText, { textAlign }]}>{alert.userPhone}</Text>
-            ) : null}
-            {alert.mapsUrl?.trim() ? (
-              <Pressable
-                onPress={async () => {
-                  const ok = await openMapsLink(alert.mapsUrl);
-                  if (!ok) {
-                    Alert.alert(t('maps.openLocationFailedTitle'), t('maps.openLocationFailedMsg'));
-                  }
-                }}
-                accessibilityRole="link"
-                accessibilityLabel={t('maps.openLocationA11y')}
-              >
-                <Text style={[styles.notificationText, styles.mapsLink, { textAlign }]} numberOfLines={3}>
-                  {alert.mapsUrl}
-                </Text>
-              </Pressable>
-            ) : null}
-            {status === 'in_progress' && assignedNgoId ? (
-              <View style={[styles.settingRow, flexRowWithDirection(direction), { marginBottom: 0 }]}>
-                <Pressable
-                  onPress={() =>
-                    navigation.navigate('Chat', {
-                      chatId: getChatThreadId(alert.id, assignedNgoId),
-                      alertId: alert.id,
-                      userId: alert.userId,
-                      ngoId: assignedNgoId,
-                      otherPersonName: alert.ngoName ?? 'NGO Support',
-                    })
-                  }
-                >
-                  <Text style={[styles.markReadText, { textAlign }]}>{t('home.openChat')}</Text>
-                </Pressable>
-                <Pressable
-                  disabled={rerequestingAlertId === alert.id}
-                  onPress={() => void handleRerequest(alert)}
-                >
-                  <Text
-                    style={[
-                      styles.markReadText,
-                      { textAlign },
-                      rerequestingAlertId === alert.id ? styles.disabledAction : null,
-                    ]}
-                  >
-                    {t('home.reRequest')}
-                  </Text>
-                </Pressable>
+        <View style={[styles.sosSectionHeader, flexRowWithDirection(direction)]}>
+          <Text style={[styles.whyTitle, { textAlign, flex: 1 }]}>{t('home.yourSosApplications')}</Text>
+          {myAlerts.length > 0 ? (
+            <Pressable
+              onPress={() => navigation.navigate('SosHistory')}
+              style={({ pressed }) => [styles.seeAllChip, pressed ? styles.seeAllChipPressed : null]}
+              accessibilityRole="button"
+              accessibilityLabel={t('home.seeAllSos')}
+            >
+              <View style={[styles.seeAllInner, flexRowWithDirection(direction)]}>
+                <Text style={styles.seeAllText}>{t('home.seeAllSos')}</Text>
+                <Ionicons name="chevron-forward" size={16} color={colors.primaryDark} />
               </View>
-            ) : null}
-            {status === 'pending' && user?.uid === alert.userId ? (
-              <PendingAlertChatThreads
-                alertId={alert.id}
-                survivorUserId={alert.userId}
-                textAlign={textAlign}
-                direction={direction}
-                t={t}
-                navigation={navigation}
-              />
-            ) : null}
-                </>
-              );
-            })()}
-          </View>
+            </Pressable>
+          ) : null}
+        </View>
+        {myAlerts.slice(0, 3).map((alert) => (
+          <SosRequestCard
+            key={alert.id}
+            alert={alert}
+            currentUserId={user?.uid}
+            t={t}
+            textAlign={textAlign}
+            direction={direction}
+            language={language}
+            navigation={navigation}
+            variant="inline"
+            rerequestingAlertId={rerequestingAlertId}
+            onRerequestState={setRerequestingAlertId}
+          />
         ))}
         {myAlerts.length === 0 ? (
           <Text style={[styles.notificationText, { textAlign }]}>{t('home.noSosApplications')}</Text>
@@ -486,10 +366,34 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  sosSectionHeader: {
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  seeAllChip: {
+    borderRadius: radii.full,
+    paddingVertical: 6,
+    paddingHorizontal: spacing.sm,
+    backgroundColor: 'rgba(109, 40, 217, 0.12)',
+  },
+  seeAllChipPressed: {
+    opacity: 0.86,
+  },
+  seeAllInner: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  seeAllText: {
+    color: colors.primaryDark,
+    fontWeight: '800',
+    fontSize: 13,
+  },
   whyTitle: {
     fontSize: 15,
     fontWeight: '800',
-    marginBottom: spacing.xs,
+    marginBottom: 0,
   },
   whyList: {
     gap: spacing.xs,
@@ -508,46 +412,10 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 13,
   },
-  settingRow: {
-    alignSelf: 'stretch',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.xs,
-    gap: spacing.sm,
-  },
-  markReadText: {
-    color: colors.primaryDark,
-    fontWeight: '700',
-    fontSize: 13,
-  },
-  disabledAction: {
-    opacity: 0.45,
-  },
-  threadList: {
-    marginTop: spacing.xs,
-    gap: spacing.sm,
-    alignSelf: 'stretch',
-  },
-  notificationRow: {
-    paddingVertical: spacing.xs,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    gap: 2,
-  },
-  notificationTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: colors.text,
-  },
   notificationText: {
     fontSize: 13,
     color: colors.textMuted,
     lineHeight: 18,
-  },
-  mapsLink: {
-    color: colors.primaryDark,
-    textDecorationLine: 'underline',
-    fontWeight: '600',
   },
 });
 

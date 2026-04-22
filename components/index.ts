@@ -5,3 +5,4 @@ export { PieChart } from './PieChart';
 export { PrimaryButton } from './PrimaryButton';
 export { ScreenLayout } from './ScreenLayout';
 export { SosButton } from './SosButton';
+export { SosRequestCard } from './SosRequestCard';
