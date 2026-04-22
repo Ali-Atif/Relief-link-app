@@ -83,20 +83,43 @@ export function QuizScreen({ navigation }: Props) {
             <View style={styles.options}>
               {current.options.map((opt, i) => {
                 const isSelected = selected === i;
+                const showFeedback = selected != null;
+                const correctIndex = current.correctIndex;
+                const isThisCorrect = showFeedback && i === correctIndex;
+                const isThisWrong = showFeedback && isSelected && i !== correctIndex;
                 return (
                   <Pressable
                     key={`${current.id}-${i}`}
                     onPress={() => setSelected(i)}
                     style={({ pressed }) => [
                       styles.option,
-                      isSelected && styles.optionSelected,
+                      !showFeedback && isSelected && styles.optionSelected,
+                      isThisCorrect && styles.optionCorrect,
+                      isThisWrong && styles.optionWrong,
                       pressed && styles.optionPressed,
                     ]}
                   >
-                    <Text style={[styles.optionLetter, isSelected && styles.optionLetterOn]}>
+                    <Text
+                      style={[
+                        styles.optionLetter,
+                        !showFeedback && isSelected && styles.optionLetterOn,
+                        isThisCorrect && styles.optionLetterCorrect,
+                        isThisWrong && styles.optionLetterWrong,
+                      ]}
+                    >
                       {String.fromCharCode(65 + i)}
                     </Text>
-                    <Text style={[styles.optionText, isSelected && styles.optionTextOn]}>{opt}</Text>
+                    <Text
+                      style={[
+                        styles.optionText,
+                        !showFeedback && isSelected && styles.optionTextOn,
+                        (isThisCorrect || isThisWrong) && styles.optionTextFeedback,
+                        isThisCorrect && styles.optionTextCorrect,
+                        isThisWrong && styles.optionTextWrong,
+                      ]}
+                    >
+                      {opt}
+                    </Text>
                   </Pressable>
                 );
               })}
@@ -219,6 +242,31 @@ const styles = StyleSheet.create({
   },
   optionTextOn: {
     fontWeight: '600',
+  },
+  optionCorrect: {
+    borderColor: '#16a34a',
+    backgroundColor: '#dcfce7',
+  },
+  optionWrong: {
+    borderColor: colors.emergencyDark,
+    backgroundColor: '#fee2e2',
+  },
+  optionLetterCorrect: {
+    backgroundColor: '#16a34a',
+    color: '#fff',
+  },
+  optionLetterWrong: {
+    backgroundColor: colors.emergencyDark,
+    color: colors.onEmergency,
+  },
+  optionTextFeedback: {
+    fontWeight: '600',
+  },
+  optionTextCorrect: {
+    color: '#14532d',
+  },
+  optionTextWrong: {
+    color: '#7f1d1d',
   },
   hint: {
     fontSize: 13,

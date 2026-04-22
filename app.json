@@ -16,7 +16,8 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "ReliefLink uses your location when you choose to share it during an emergency.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "ReliefLink may use your location in the background only when you enable related features."
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "ReliefLink may use your location in the background only when you enable related features.",
+        "NSContactsUsageDescription": "ReliefLink can read your contacts so you can pick a phone number for emergency SOS messages."
       }
     },
     "android": {
@@ -30,7 +31,8 @@
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
-        "SEND_SMS"
+        "SEND_SMS",
+        "READ_CONTACTS"
       ]
     },
     "web": {
@@ -42,6 +44,12 @@
         {
           "locationWhenInUsePermission": "ReliefLink uses your location when you choose to share it during an emergency.",
           "locationAlwaysAndWhenInUsePermission": "ReliefLink may use your location when you enable related safety features."
+        }
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "ReliefLink needs access to your contacts so you can pick an emergency number from your phone."
         }
       ],
       "expo-audio",

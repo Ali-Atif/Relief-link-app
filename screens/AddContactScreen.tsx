@@ -1,6 +1,7 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useCallback, useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
+import * as Contacts from 'expo-contacts';
+import { useCallback, useRef, useState } from 'react';
+import { Alert, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { PrimaryButton, ScreenLayout } from '../components';
 import { useAuth } from '../contexts/AuthContext';
@@ -30,6 +31,90 @@ export function AddContactScreen({ navigation }: Props) {
   const [phone, setPhone] = useState('');
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const pickingInFlight = useRef(false);
+
+  const displayNameFromContact = useCallback(
+    (c: Contacts.ExistingContact) => {
+      const full = c.name?.trim();
+      if (full) {
+        return full;
+      }
+      const fromParts = [c.firstName, c.middleName, c.lastName]
+        .filter((x): x is string => Boolean(x && String(x).trim()))
+        .join(' ')
+        .trim();
+      if (fromParts) {
+        return fromParts;
+      }
+      if (c.company?.trim()) {
+        return c.company.trim();
+      }
+      return t('addContact.unknownContactName');
+    },
+    [t],
+  );
+
+  const pickFromContacts = useCallback(async () => {
+    if (Platform.OS === 'web') {
+      Alert.alert(t('addContact.contactsWebTitle'), t('addContact.contactsWebMsg'));
+      return;
+    }
+    if (pickingInFlight.current) {
+      return;
+    }
+    pickingInFlight.current = true;
+    setPicking(true);
+    try {
+      const available = await Contacts.isAvailableAsync();
+      if (!available) {
+        Alert.alert(
+          t('addContact.contactsUnavailableTitle'),
+          t('addContact.contactsUnavailableMsg'),
+        );
+        return;
+      }
+      if (Platform.OS === 'android') {
+        const perm = await Contacts.requestPermissionsAsync();
+        if (perm.status !== 'granted') {
+          Alert.alert(
+            t('addContact.contactsPermissionTitle'),
+            t('addContact.contactsPermissionMsg'),
+          );
+          return;
+        }
+      }
+      const contact = await Contacts.presentContactPickerAsync();
+      if (!contact) {
+        return;
+      }
+      const nameStr = displayNameFromContact(contact);
+      const withNumbers = contact.phoneNumbers?.filter(
+        (p) => p.number && String(p.number).trim().length > 0,
+      );
+      if (!withNumbers?.length) {
+        setName((prev) => (prev.trim() ? prev : nameStr));
+        Alert.alert(
+          t('addContact.contactNoPhoneTitle'),
+          t('addContact.contactNoPhoneMsg'),
+        );
+        return;
+      }
+      const primary = withNumbers.find((p) => p.isPrimary) ?? withNumbers[0];
+      const raw = String(primary.number).trim();
+      setName(nameStr);
+      setPhone(raw);
+      setPhoneError(null);
+    } catch {
+      Alert.alert(
+        t('addContact.contactPickerErrorTitle'),
+        t('addContact.contactPickerErrorMsg'),
+      );
+    } finally {
+      pickingInFlight.current = false;
+      setPicking(false);
+    }
+  }, [displayNameFromContact, t]);
 
   const save = async () => {
     setPhoneError(null);
@@ -102,12 +187,21 @@ export function AddContactScreen({ navigation }: Props) {
         {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
         <Text style={styles.hint}>{t('addContact.hint')}</Text>
       </View>
-      <PrimaryButton
-        label={saving ? t('addContact.saving') : t('addContact.save')}
-        icon="save-outline"
-        onPress={() => void save()}
-        disabled={saving}
-      />
+      <View style={styles.actionButtons}>
+        <PrimaryButton
+          label={picking ? t('addContact.openingContacts') : t('addContact.pickFromContacts')}
+          icon="people-outline"
+          variant="outline"
+          onPress={() => void pickFromContacts()}
+          disabled={saving || picking}
+        />
+        <PrimaryButton
+          label={saving ? t('addContact.saving') : t('addContact.save')}
+          icon="save-outline"
+          onPress={() => void save()}
+          disabled={saving || picking}
+        />
+      </View>
     </ScreenLayout>
   );
 }
@@ -141,5 +235,8 @@ const styles = StyleSheet.create({
   hint: {
     fontSize: 12,
     color: colors.textMuted,
+  },
+  actionButtons: {
+    gap: spacing.md,
   },
 });
