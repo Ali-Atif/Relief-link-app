@@ -33,6 +33,11 @@ type Props = {
   badge?: string;
   /** Guides grid: centered icon + title only (no subtitle strip). */
   layout?: 'default' | 'compact';
+  /**
+   * When true (e.g. Home quick-access rows), the tile stretches to the row’s tallest card
+   * so all modules in a row share equal height.
+   */
+  fillRow?: boolean;
   /** Layout direction for header row + text alignment. */
   direction?: 'ltr' | 'rtl';
   onPress?: () => void;
@@ -49,6 +54,7 @@ export function QuickTile({
   color = colors.primary,
   badge,
   layout = 'default',
+  fillRow = false,
   direction = 'ltr',
   onPress,
 }: Props) {
@@ -115,6 +121,7 @@ export function QuickTile({
     <Animated.View
       style={[
         styles.shadowHost,
+        fillRow && styles.shadowHostFillRow,
         WEB_CURSOR,
         stackOnTop && styles.cardStacked,
         {
@@ -125,7 +132,7 @@ export function QuickTile({
         },
       ]}
     >
-      <View style={styles.cardClip}>
+      <View style={[styles.cardClip, fillRow && styles.cardClipFillRow]}>
         <Pressable
           onPress={onPress}
           onPressIn={onPressIn}
@@ -133,7 +140,11 @@ export function QuickTile({
           onHoverIn={onHoverIn}
           onHoverOut={onHoverOut}
           android_ripple={null}
-          style={[styles.pressableFill, layout === 'compact' && styles.pressableCompact]}
+          style={[
+            styles.pressableFill,
+            fillRow && styles.pressableFillRow,
+            layout === 'compact' && styles.pressableCompact,
+          ]}
         >
           {layout === 'compact' ? (
             <View style={styles.compactInner}>
@@ -145,7 +156,7 @@ export function QuickTile({
               </Text>
             </View>
           ) : (
-            <>
+            <View style={fillRow ? styles.defaultFillCol : undefined}>
               <View
                 style={[
                   styles.header,
@@ -163,7 +174,7 @@ export function QuickTile({
                   </View>
                 ) : null}
               </View>
-              <View style={styles.body}>
+              <View style={[styles.body, fillRow && styles.bodyFillRow]}>
                 <Text
                   style={[styles.title, !subtitle && styles.titleNoSubtitle, { textAlign: alignText }]}
                   numberOfLines={2}
@@ -176,7 +187,7 @@ export function QuickTile({
                   </Text>
                 ) : null}
               </View>
-            </>
+            </View>
           )}
         </Pressable>
       </View>
@@ -193,6 +204,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     zIndex: 0,
   },
+  shadowHostFillRow: {
+    flex: 1,
+    minHeight: 0,
+  },
   cardClip: {
     borderRadius: radii.md,
     overflow: 'hidden',
@@ -200,12 +215,23 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
+  cardClipFillRow: {
+    flex: 1,
+  },
+  defaultFillCol: {
+    flex: 1,
+    minHeight: 0,
+  },
   cardStacked: {
     zIndex: 20,
   },
   pressableFill: {
     flexGrow: 1,
     flexShrink: 0,
+  },
+  pressableFillRow: {
+    flex: 1,
+    minHeight: 0,
   },
   pressableCompact: {
     justifyContent: 'center',
@@ -269,6 +295,9 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
     borderBottomLeftRadius: radii.md,
     borderBottomRightRadius: radii.md,
+  },
+  bodyFillRow: {
+    flex: 1,
   },
   title: {
     fontSize: 14,

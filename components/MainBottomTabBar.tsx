@@ -27,11 +27,11 @@ const TABS: TabDef[] = [
   { tabKey: 'Home', screen: 'Home', labelKey: 'home.tabHome', iconOn: 'home', iconOff: 'home-outline' },
   { tabKey: 'Guides', screen: 'Guides', labelKey: 'home.tabGuides', iconOn: 'book', iconOff: 'book-outline' },
   {
-    tabKey: 'Report',
-    screen: 'Report',
-    labelKey: 'home.tabReports',
-    iconOn: 'medkit',
-    iconOff: 'medkit-outline',
+    tabKey: 'EmergencyContacts',
+    screen: 'EmergencyContacts',
+    labelKey: 'home.tabEmergencyNumbers',
+    iconOn: 'call',
+    iconOff: 'call-outline',
   },
   {
     tabKey: 'SOS',
@@ -43,9 +43,9 @@ const TABS: TabDef[] = [
   {
     tabKey: 'Contacts',
     screen: 'Contacts',
-    labelKey: 'home.tabChecklist',
-    iconOn: 'checkbox',
-    iconOff: 'checkbox-outline',
+    labelKey: 'home.tabFamilyChecklist',
+    iconOn: 'people',
+    iconOff: 'people-outline',
   },
   { tabKey: 'Quiz', screen: 'Quiz', labelKey: 'home.tabQuiz', iconOn: 'school', iconOff: 'school-outline' },
 ];
@@ -66,9 +66,11 @@ export function mapStackRouteToTabKey(route: string | undefined): string {
     case 'Home':
     case 'Profile':
     case 'SOS':
-    case 'Report':
+    case 'EmergencyContacts':
     case 'Quiz':
       return route;
+    case 'Report':
+      return 'Home';
     default:
       return 'Home';
   }
@@ -126,9 +128,7 @@ export function MainBottomTabBar({ navigationRef, routeName }: Props) {
                 color={active ? colors.primary : colors.textMuted}
               />
               <Text
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.78}
+                numberOfLines={2}
                 style={[styles.tabLabel, active && styles.tabLabelActive]}
               >
                 {t(tab.labelKey)}
@@ -188,6 +188,7 @@ const styles = StyleSheet.create({
   tabLabel: {
     marginTop: 4,
     fontSize: 10,
+    lineHeight: 12,
     fontWeight: '600',
     color: colors.textMuted,
     textAlign: 'center',

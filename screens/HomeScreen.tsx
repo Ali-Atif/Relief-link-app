@@ -9,10 +9,11 @@ import QuickTile from '../components/newUI/QuickTile';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useNotifications } from '../hooks/useNotifications';
 import type { RootStackParamList } from '../navigation/types';
+import { PAKISTAN_EMERGENCY_CONTACTS } from '../data/pakistanEmergencyContacts';
 import { getDailySafetyTip } from '../services/safetyTips';
 import { type SosAlert, subscribeUserSosAlerts } from '../services/sosAlertsService';
 import { spacing, radii, colors } from '../utils/constants';
-import { blockDirection, flexRowWithDirection, gridRowDirection } from '../utils/layoutRtl';
+import { blockDirection, flexRowWithDirection } from '../utils/layoutRtl';
 import { useAuth } from '../contexts/AuthContext';
 
 export function HomeScreen() {
@@ -41,13 +42,13 @@ export function HomeScreen() {
   const tabItems: Array<{
     label: string;
     icon: string;
-    screen: 'Home' | 'Guides' | 'Report' | 'Contacts' | 'SOS' | 'Quiz';
+    screen: 'Home' | 'Guides' | 'EmergencyContacts' | 'Contacts' | 'SOS' | 'Quiz';
     active?: boolean;
   }> = [
     { label: t('home.tabHome'), icon: 'home', screen: 'Home', active: true },
     { label: t('home.tabGuides'), icon: 'book', screen: 'Guides' },
-    { label: t('home.tabReports'), icon: 'medkit', screen: 'Report' },
-    { label: t('home.tabChecklist'), icon: 'checkmark-circle', screen: 'Contacts' },
+    { label: t('home.tabEmergencyNumbers'), icon: 'call', screen: 'EmergencyContacts' },
+    { label: t('home.tabFamilyChecklist'), icon: 'people', screen: 'Contacts' },
     { label: t('home.tabSOS'), icon: 'warning', screen: 'SOS' },
     { label: t('home.tabQuiz'), icon: 'help-circle', screen: 'Quiz' },
   ];
@@ -106,12 +107,14 @@ export function HomeScreen() {
         subtitleStyle={{ textAlign }}
       />
 
-      {/* Quick Access grid */}
+      {/* Quick Access — explicit rows so tiles in each row share equal height */}
       <View style={blockDirection(direction)}>
         <Text style={[styles.sectionTitle, { textAlign }]}>{t('home.quickAccess')}</Text>
-          <View style={[styles.grid, gridRowDirection(direction)]}>
+        <View>
+          <View style={[styles.gridRow, flexRowWithDirection(direction)]}>
             <View style={styles.col}>
               <QuickTile
+                fillRow
                 direction={direction}
                 title={t('home.disasterGuides')}
                 subtitle={t('home.learnSafetyProcedure')}
@@ -123,17 +126,21 @@ export function HomeScreen() {
             </View>
             <View style={styles.col}>
               <QuickTile
+                fillRow
                 direction={direction}
-                title={t('home.ngoReport')}
-                subtitle={t('home.emergencyMedicalHelp')}
-                icon="heart"
+                title={t('home.emergencyContactsModule')}
+                subtitle={t('home.emergencyContactsModuleSubtitle')}
+                icon="call"
                 color="#ef4444"
-                badge={t('home.badgeTutorial', { count: 1 })}
-                onPress={() => navigation.navigate('Report')}
+                badge={t('home.badgeHelplines', { count: PAKISTAN_EMERGENCY_CONTACTS.length })}
+                onPress={() => navigation.navigate('EmergencyContacts')}
               />
             </View>
+          </View>
+          <View style={[styles.gridRow, flexRowWithDirection(direction)]}>
             <View style={styles.col}>
               <QuickTile
+                fillRow
                 direction={direction}
                 title={t('home.emergencySOS')}
                 subtitle={t('home.quickEmergencyAccess')}
@@ -145,6 +152,7 @@ export function HomeScreen() {
             </View>
             <View style={styles.col}>
               <QuickTile
+                fillRow
                 direction={direction}
                 title={t('home.preparedness')}
                 subtitle={t('home.familyChecklist')}
@@ -154,8 +162,11 @@ export function HomeScreen() {
                 onPress={() => navigation.navigate('Contacts')}
               />
             </View>
+          </View>
+          <View style={[styles.gridRow, flexRowWithDirection(direction)]}>
             <View style={styles.col}>
               <QuickTile
+                fillRow
                 direction={direction}
                 title={t('home.tabQuiz')}
                 subtitle={t('home.quizQuickSubtitle')}
@@ -164,7 +175,9 @@ export function HomeScreen() {
                 onPress={() => navigation.navigate('Quiz' as never)}
               />
             </View>
+            <View style={styles.colSpacer} />
           </View>
+        </View>
       </View>
 
       {/* Safety Tip of the Day */}
@@ -315,16 +328,20 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: spacing.xs,
   },
-  grid: {
-    justifyContent: 'space-between',
+  gridRow: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
     marginHorizontal: -spacing.xs,
-    paddingTop: 0,
-    paddingBottom: spacing.xs,
+    marginBottom: spacing.md,
   },
   col: {
-    flexBasis: '48%',
-    maxWidth: '48%',
-    marginBottom: spacing.md,
+    flex: 1,
+    minWidth: 0,
+    paddingHorizontal: spacing.xs,
+  },
+  colSpacer: {
+    flex: 1,
+    minWidth: 0,
     paddingHorizontal: spacing.xs,
   },
   tipCard: {

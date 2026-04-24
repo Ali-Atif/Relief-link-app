@@ -24,6 +24,7 @@ import { RegisterScreen } from "../screens/RegisterScreen";
 import { RegisterUserScreen } from "../screens/RegisterUserScreen";
 import { QuizScreen } from "../screens/QuizScreen";
 import { ReportScreen } from "../screens/ReportScreen";
+import { EmergencyContactsScreen } from "../screens/EmergencyContactsScreen";
 import { SosHistoryScreen } from "../screens/SosHistoryScreen";
 import { SOSScreen } from "../screens/SOSScreen";
 import { colors } from "../utils/constants";
@@ -106,6 +107,7 @@ export function RootNavigator() {
               <Stack.Screen name="Contacts" component={ContactsScreen} />
               <Stack.Screen name="AddContact" component={AddContactScreen} />
               <Stack.Screen name="Report" component={ReportScreen} />
+              <Stack.Screen name="EmergencyContacts" component={EmergencyContactsScreen} />
               <Stack.Screen name="Guides" component={GuidesScreen} />
               <Stack.Screen name="GuideDetail" component={GuideDetailScreen} />
               <Stack.Screen name="Quiz" component={QuizScreen} />
